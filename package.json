@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "description": "So Thu Chi - Netlify Function dependencies",
+  "dependencies": {
+    "@netlify/blobs": "^11.1.0"
+  }
+}

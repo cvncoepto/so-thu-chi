@@ -390,7 +390,9 @@ async function initAuth0(){
     auth0Client = await window.auth0.createAuth0Client({
       domain: AUTH0_DOMAIN,
       clientId: AUTH0_CLIENT_ID,
-      authorizationParams: { redirect_uri: window.location.origin }
+      authorizationParams: { redirect_uri: window.location.origin },
+      cacheLocation: "localstorage", // keep the session across page reloads
+      useRefreshTokens: true         // and across access-token expiry, without a silent iframe
     });
     const q = window.location.search;
     if (q.includes("code=") && q.includes("state=")){
@@ -401,6 +403,7 @@ async function initAuth0(){
       const u = await auth0Client.getUser();
       S.user = { name: u.name || u.email || "", avatarUrl: u.picture || "" };
       S.authProvider = "auth0";
+      startNetlifyDb();
     }
   }catch(e){ /* Auth0 not reachable / misconfigured — fallback button stays */ }
   renderAccount();
@@ -442,24 +445,76 @@ function renderLockScreen(){
   if (btn) btn.onclick = doLogin;
 }
 
-async function boot(){
-  renderAccount();
-  let db;
-  if (typeof window.claude === "undefined"){ db = mockDb(); initAuth0(); }
-  else {
-    try { db = await window.claude.use("db"); } catch(e){ db = null; }
-    // Acquire "downloads" and "user" independently — never let a slow/unsupported capability block the rest of the app.
-    Promise.resolve(window.claude.use("downloads")).then(d=>{
-      S.downloads = d || null;
-      if (S.tab==="settings" && S.ready) renderSettingsView();
-    }).catch(()=>{ S.downloads = null; });
-    Promise.resolve(window.claude.use("user")).then(async u=>{
-      if (!u) return;
-      const me = await u.me();
-      S.user = me;
-      renderAccount();
-    }).catch(()=>{});
+/* ================= real storage for the standalone (Netlify) version =================
+   Backed by a Netlify Function + Netlify Blobs (see netlify/functions/data.mjs), so data
+   survives page reloads and new deploys. Every request carries the visitor's Auth0 access
+   token; the function rejects anything it can't verify, so signed-out visitors get nothing. */
+function netlifyDb(){
+  const ENDPOINT = "/.netlify/functions/data";
+  const cache = { settings: null, tx: {} };
+  const settingsSubs = new Set();
+  const txSubs = new Set();
+  let saveTimer = null;
+
+  async function authHeaders(extra){
+    const token = await auth0Client.getTokenSilently();
+    return Object.assign({ "Authorization": "Bearer " + token }, extra||{});
   }
+  function fireSettings(){ settingsSubs.forEach(fn=>fn({exists:!!cache.settings, data:()=>cache.settings})); }
+  function fireTx(){
+    const arr = Object.keys(cache.tx).map(id=>({id,data:cache.tx[id]})).sort((a,b)=> b.data.date.localeCompare(a.data.date));
+    txSubs.forEach(fn=>fn({docs:arr.map(x=>({id:x.id, exists:true, data:()=>x.data}))}));
+  }
+  function persist(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async ()=>{
+      try{
+        const headers = await authHeaders({ "Content-Type":"application/json" });
+        const res = await fetch(ENDPOINT, { method:"PUT", headers, body: JSON.stringify({ settings: cache.settings, tx: cache.tx }) });
+        if (!res.ok) throw new Error("save_failed");
+      }catch(e){ toast("Không lưu được lên máy chủ, thử lại sau."); }
+    }, 250);
+  }
+  const ready = (async ()=>{
+    const headers = await authHeaders();
+    const res = await fetch(ENDPOINT, { headers });
+    if (!res.ok) throw new Error("load_failed");
+    const data = await res.json();
+    cache.settings = (data && data.settings) || null;
+    cache.tx = (data && data.tx) || {};
+  })();
+
+  return {
+    doc(path){
+      return {
+        get(){ return ready.then(()=>({exists:!!cache.settings, data:()=>cache.settings})); },
+        set(data){ cache.settings = Object.assign({}, data); fireSettings(); persist(); return Promise.resolve(); },
+        onSnapshot(next, errFn){
+          settingsSubs.add(next);
+          ready.then(()=> next({exists:!!cache.settings, data:()=>cache.settings})).catch(err=>{ if(errFn) errFn(err); });
+          return ()=>settingsSubs.delete(next);
+        }
+      };
+    },
+    collection(path){
+      return {
+        orderBy(){ return this; }, limit(){ return this; }, where(){ return this; },
+        add(data){ const id=uid(); cache.tx[id]=data; fireTx(); persist(); return Promise.resolve({id}); },
+        doc(id){ return {
+          update(data){ cache.tx[id]=Object.assign({},cache.tx[id],data); fireTx(); persist(); return Promise.resolve(); },
+          delete(){ delete cache.tx[id]; fireTx(); persist(); return Promise.resolve(); }
+        }; },
+        onSnapshot(next, errFn){
+          txSubs.add(next);
+          ready.then(()=> fireTx()).catch(err=>{ if(errFn) errFn(err); });
+          return ()=>txSubs.delete(next);
+        }
+      };
+    }
+  };
+}
+
+function attachDbSubscriptions(db){
   if (!db){ S.dbUnavailable = true; renderBanner(); renderAll(); return; }
   S.db = db;
   let seeding = false;
@@ -495,6 +550,35 @@ async function boot(){
   }
   subscribeSettings();
   subscribeTx();
+}
+
+let netlifyDbStarted = false;
+function startNetlifyDb(){
+  if (netlifyDbStarted) return;
+  netlifyDbStarted = true;
+  attachDbSubscriptions(netlifyDb());
+}
+
+async function boot(){
+  renderAccount();
+  if (typeof window.claude === "undefined"){
+    initAuth0(); // starts netlifyDb itself once signed in; renders the lock screen until then
+    return;
+  }
+  let db;
+  try { db = await window.claude.use("db"); } catch(e){ db = null; }
+  // Acquire "downloads" and "user" independently — never let a slow/unsupported capability block the rest of the app.
+  Promise.resolve(window.claude.use("downloads")).then(d=>{
+    S.downloads = d || null;
+    if (S.tab==="settings" && S.ready) renderSettingsView();
+  }).catch(()=>{ S.downloads = null; });
+  Promise.resolve(window.claude.use("user")).then(async u=>{
+    if (!u) return;
+    const me = await u.me();
+    S.user = me;
+    renderAccount();
+  }).catch(()=>{});
+  attachDbSubscriptions(db);
 }
 
 /* ================= derived data ================= */
