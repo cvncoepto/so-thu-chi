@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sổ Thu Chi</title>
-
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <!-- Only needed for the standalone (Netlify) version — login via Google through Auth0. Harmless if left in. -->
 <script src="https://cdn.auth0.com/js/auth0-spa-js/2.4/auth0-spa-js.production.js"></script>
@@ -246,6 +245,10 @@ tr.total td{font-weight:700; background:var(--surface-2);}
 .toast{position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(12px); background:var(--ink); color:var(--bg); font-size:13px; font-weight:600; padding:10px 18px; border-radius:99px; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; z-index:50;}
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 .footnote{font-size:11.5px; color:var(--muted); margin-top:18px; text-align:center;}
+.lock-card{max-width:420px; margin:56px auto; text-align:center; padding:38px 28px;}
+.lock-card .lock-icon{font-size:32px; margin-bottom:14px;}
+.lock-card h2{font-size:19px; font-weight:600; margin-bottom:8px;}
+.lock-card p{font-size:13.5px; color:var(--ink-2); line-height:1.55; margin-bottom:22px;}
 [data-view]{display:none;}
 [data-view].active{display:block;}
 @media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important;} }
@@ -374,8 +377,8 @@ const S = { db:null, downloads:null, user:null, authProvider:null, settings:null
 /* ================= Google login (Auth0) — only used OUTSIDE Claude, e.g. when this file is hosted on Netlify =================
    Fill in the two values below after creating your Auth0 application (see the setup guide).
    Leave them as-is while running inside Claude — this block is skipped there, the Claude account identity is used instead. */
-const AUTH0_DOMAIN = "sothuchi.us.auth0.com";       // e.g. "dev-abc123.us.auth0.com"
-const AUTH0_CLIENT_ID = "2qmfxnlrFkrt71DONkPuB0bwii3WG6xl"; // from Auth0 → Applications → your app → Settings
+const AUTH0_DOMAIN = "sothuchi.us.auth0.com";
+const AUTH0_CLIENT_ID = "2qmfxnlrFkrt71DONkPuB0bwii3WG6xl";
 let auth0Client = null;
 
 async function initAuth0(){
@@ -401,6 +404,42 @@ async function initAuth0(){
     }
   }catch(e){ /* Auth0 not reachable / misconfigured — fallback button stays */ }
   renderAccount();
+  renderAll();
+}
+
+/* Only outside Claude: the page's data and editing controls are hidden until the
+   visitor signs in with Google, so a random person opening the public link can't
+   read your transactions. Inside Claude this never applies — access is controlled
+   by artifact sharing instead. */
+function isLocked(){
+  return (typeof window.claude === "undefined") && !(S.authProvider === "auth0" && S.user && S.user.name);
+}
+
+function doLogin(){
+  if (typeof window.claude === "undefined"){
+    if (auth0Client){
+      auth0Client.loginWithRedirect({ authorizationParams: { connection: "google-oauth2" } });
+    } else {
+      toast("Chưa cấu hình đăng nhập Google — điền AUTH0_DOMAIN và AUTH0_CLIENT_ID ở đầu file rồi deploy lại.");
+    }
+  } else {
+    toast("Trang này dùng chính tài khoản Claude của bạn để xác thực — không cần đăng nhập riêng.");
+  }
+}
+
+function renderLockScreen(){
+  document.querySelectorAll("[data-view]").forEach(v=>{ v.innerHTML=""; v.classList.remove("active"); });
+  const dash = document.querySelector('[data-view="dashboard"]');
+  dash.classList.add("active");
+  dash.innerHTML =
+    '<div class="card lock-card">'+
+      '<div class="lock-icon">🔒</div>'+
+      '<h2 class="disp">Nội dung riêng tư</h2>'+
+      '<p>Đăng nhập bằng Google để xem và quản lý sổ thu chi của bạn. Người khác mở đường dẫn này sẽ không thấy được dữ liệu.</p>'+
+      '<button type="button" class="btn btn-primary" id="lockLoginBtn">Đăng nhập bằng Google</button>'+
+    '</div>';
+  const btn = document.getElementById("lockLoginBtn");
+  if (btn) btn.onclick = doLogin;
 }
 
 async function boot(){
@@ -515,24 +554,22 @@ function renderAccount(){
   } else {
     el.innerHTML = '<button type="button" class="account-btn" id="loginBtn">Đăng nhập'+(typeof window.claude==="undefined" ? ' bằng Google' : '')+'</button>';
     const btn = document.getElementById("loginBtn");
-    if (btn) btn.onclick = ()=>{
-      if (typeof window.claude === "undefined"){
-        if (auth0Client){
-          auth0Client.loginWithRedirect({ authorizationParams: { connection: "google-oauth2" } });
-        } else {
-          toast("Chưa cấu hình đăng nhập Google — điền AUTH0_DOMAIN và AUTH0_CLIENT_ID ở đầu file rồi deploy lại.");
-        }
-      } else {
-        toast("Trang này dùng chính tài khoản Claude của bạn để xác thực — không cần đăng nhập riêng.");
-      }
-    };
+    if (btn) btn.onclick = doLogin;
   }
 }
 
 function renderAll(){
   renderBanner();
   document.getElementById("periodTag").textContent = S.ready||S.dbUnavailable ? "" : "Đang tải…";
+  const locked = isLocked();
+  const tabsEl = document.getElementById("tabs");
+  if (tabsEl) tabsEl.style.display = locked ? "none" : "";
   renderTabs();
+  if (locked){
+    renderLockScreen();
+    document.getElementById("footnote").textContent = "";
+    return;
+  }
   if (!S.settings){ return; }
   renderDashboard();
   renderEntry();
