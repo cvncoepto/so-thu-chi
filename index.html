@@ -421,9 +421,12 @@ function isLocked(){
 function doLogin(){
   if (typeof window.claude === "undefined"){
     if (auth0Client){
-      // prompt:"login" forces Google to show the account chooser / password prompt every time,
-      // instead of silently reusing whatever Google session is already active in the browser.
-      auth0Client.loginWithRedirect({ authorizationParams: { connection: "google-oauth2", prompt: "login" } });
+      // Google's authorize endpoint only understands prompt=none|consent|select_account — it silently
+      // ignores "login" (that's an Auth0/OIDC value, not a Google one), which is why that value did
+      // nothing. select_account is the closest Google offers: it always shows the account chooser
+      // instead of silently reusing the active Google session, so a second Google account (or "sign
+      // in with another account") is always one explicit click away rather than automatic.
+      auth0Client.loginWithRedirect({ authorizationParams: { connection: "google-oauth2", prompt: "select_account" } });
     } else {
       toast("Chưa cấu hình đăng nhập Google — điền AUTH0_DOMAIN và AUTH0_CLIENT_ID ở đầu file rồi deploy lại.");
     }
