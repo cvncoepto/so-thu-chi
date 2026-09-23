@@ -391,8 +391,8 @@ async function initAuth0(){
       domain: AUTH0_DOMAIN,
       clientId: AUTH0_CLIENT_ID,
       authorizationParams: { redirect_uri: window.location.origin },
-      cacheLocation: "localstorage", // keep the session across page reloads
-      useRefreshTokens: true         // and across access-token expiry, without a silent iframe
+      cacheLocation: "memory",  // don't persist the session — closing the tab (or reloading) signs you out
+      useRefreshTokens: true    // still avoids a silent-iframe refresh while the tab stays open
     });
     const q = window.location.search;
     if (q.includes("code=") && q.includes("state=")){
@@ -421,7 +421,9 @@ function isLocked(){
 function doLogin(){
   if (typeof window.claude === "undefined"){
     if (auth0Client){
-      auth0Client.loginWithRedirect({ authorizationParams: { connection: "google-oauth2" } });
+      // prompt:"login" forces Google to show the account chooser / password prompt every time,
+      // instead of silently reusing whatever Google session is already active in the browser.
+      auth0Client.loginWithRedirect({ authorizationParams: { connection: "google-oauth2", prompt: "login" } });
     } else {
       toast("Chưa cấu hình đăng nhập Google — điền AUTH0_DOMAIN và AUTH0_CLIENT_ID ở đầu file rồi deploy lại.");
     }
@@ -1002,13 +1004,29 @@ function buildCsv(rows){
   return "﻿"+lines.join("\r\n");
 }
 async function doExport(){
-  if (!S.downloads){ toast("Tính năng xuất file không khả dụng ở đây."); return; }
   if (!S.tx.length){ toast("Chưa có giao dịch nào để xuất."); return; }
   const rows = S.tx.slice().sort((a,b)=> a.date<b.date?-1:(a.date>b.date?1:0));
   const csv = buildCsv(rows);
   const stamp = todayISO();
+  const filename = "so-thu-chi-"+stamp+".csv";
+
+  if (typeof window.claude === "undefined"){
+    // Standalone (Netlify): there's no "downloads" capability here — trigger a normal browser download instead.
+    try{
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+      toast("Đã xuất "+rows.length+" giao dịch ra file CSV.");
+    }catch(err){ toast("Không xuất được file, thử lại nhé."); }
+    return;
+  }
+
+  if (!S.downloads){ toast("Tính năng xuất file không khả dụng ở đây."); return; }
   try{
-    const res = await S.downloads.save({ filename: "so-thu-chi-"+stamp+".csv", data: csv });
+    const res = await S.downloads.save({ filename, data: csv });
     if (res.status==="saved") toast("Đã xuất "+rows.length+" giao dịch ra file CSV.");
   }catch(err){
     const code = err && err.code;
@@ -1137,7 +1155,7 @@ function renderSettingsView(){
       '<div class="card data-card">'+
         '<div class="section-title">Dữ liệu</div>'+
         '<div class="data-actions">'+
-          '<button type="button" class="btn" id="exportCsv"'+(S.downloads?"":" disabled")+'>Xuất file (.csv)</button>'+
+          '<button type="button" class="btn" id="exportCsv"'+((typeof window.claude==="undefined"||S.downloads)?"":" disabled")+'>Xuất file (.csv)</button>'+
           '<button type="button" class="btn" id="importCsvBtn"'+(S.importing?" disabled":"")+'>'+(S.importing?"Đang nhập…":"Nhập file (.csv)")+'</button>'+
           '<input type="file" id="importCsvInput" accept=".csv,text/csv" style="display:none">'+
           (sampleCount? '<button type="button" class="btn btn-danger" id="clearSample">Xóa dữ liệu mẫu</button>' : '')+
