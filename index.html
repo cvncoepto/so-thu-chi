@@ -175,6 +175,7 @@ a{color:inherit;}
 /* ---------- bar chart ---------- */
 .chart-svg{width:100%; height:auto; display:block;}
 .chart-svg text{font-size:12.5px; fill:var(--muted);}
+@media (min-width:861px){ .chart-svg text{font-size:14px;} }
 .chart-legend{display:flex; gap:16px; font-size:12.5px; color:var(--ink-2); margin-top:8px;}
 .chart-legend .li{display:flex; align-items:center; gap:6px;}
 .chart-legend .sw{width:10px; height:10px; border-radius:3px;}
@@ -793,7 +794,9 @@ function donutHtml(slices, total){
 }
 
 function groupedBarSvg(rows, labelA, labelB, colorA, colorB){
-  const W=640,H=238, padL=54,padR=10,padT=16,padB=28;
+  // Taller on PC (matches the .g-2 two-column breakpoint elsewhere): +1.25x again on top of the mobile height.
+  const isDesktop = typeof window!=="undefined" && window.matchMedia && window.matchMedia("(min-width:861px)").matches;
+  const W=640, H=isDesktop?298:238, padL=54,padR=10,padT=isDesktop?18:16,padB=isDesktop?32:28;
   const max = Math.max(1, ...rows.map(r=>Math.max(r.a,r.b)));
   const niceMax = niceCeil(max);
   const plotW = W-padL-padR, plotH = H-padT-padB;
