@@ -1,14 +1,4 @@
-<!doctype html>
-<html lang="vi">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sổ Thu Chi</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
-<!-- Only needed for the standalone (Netlify) version — login via Google through Auth0. Harmless if left in. -->
-<script src="https://cdn.auth0.com/js/auth0-spa-js/2.4/auth0-spa-js.production.js"></script>
-</head>
-<body>
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
 <style>
 :root{
   --bg:#f7f5ee; --surface:#fffffe; --surface-2:#f1eee2; --line:#e4dfcf;
@@ -62,7 +52,7 @@
 }
 *{box-sizing:border-box;}
 body{background:var(--bg); color:var(--ink); font-family:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;}
-.mono{font-family:"IBM Plex Mono","SFMono-Regular",Menlo,"Liberation Mono","Courier New",ui-monospace,monospace; font-variant-numeric:tabular-nums; font-feature-settings:"zero" 0;}
+.mono{font-family:"IBM Plex Mono","SFMono-Regular",Menlo,"Liberation Mono","Courier New",ui-monospace,monospace; font-variant-numeric:tabular-nums; font-feature-settings:"zero" 1;}
 .disp{font-family:"Fraunces",Georgia,serif;}
 #app{max-width:1080px; margin:0 auto; padding-inline:16px; padding-block:18px 64px;}
 h1,h2,h3{margin:0; text-wrap:balance;}
@@ -172,7 +162,7 @@ a{color:inherit;}
 
 /* ---------- bar chart ---------- */
 .chart-svg{width:100%; height:auto; display:block;}
-.chart-svg text{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:9.5px; fill:var(--muted);}
+.chart-svg text{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:9.5px; fill:var(--muted); font-feature-settings:"zero" 1;}
 .chart-legend{display:flex; gap:16px; font-size:12px; color:var(--ink-2); margin-top:8px;}
 .chart-legend .li{display:flex; align-items:center; gap:6px;}
 .chart-legend .sw{width:10px; height:10px; border-radius:3px;}
@@ -216,7 +206,6 @@ tr.total td{font-weight:700; background:var(--surface-2);}
 .data-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;}
 .data-actions .btn{flex:1 1 150px;}
 @media (max-width:480px){ .data-actions{flex-direction:column;} .data-actions .btn{flex:1 1 auto;} }
-@media (max-width:760px){ .data-card{display:none;} }
 .btn:hover{border-color:var(--accent);}
 .btn-primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
 .btn-primary:hover{background:var(--accent-strong); border-color:var(--accent-strong);}
@@ -291,6 +280,22 @@ function pad2(n){return String(n).padStart(2,"0");}
 function todayISO(){const d=new Date(); return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());}
 function fmtMoney(n){ n = Number(n)||0; const neg = n<0; const s = Math.round(Math.abs(n)).toLocaleString("vi-VN"); return (neg?"-":"")+s+" ₫"; }
 function fmtPct(n){ return Math.round((Number(n)||0)*100)+"%"; }
+/** Thousand/million separators for editable amount fields (not used for years). */
+function fmtInt(n){ n = Math.round(Number(n)||0); return n.toLocaleString("vi-VN"); }
+function parseIntInput(v){ const s = String(v==null?"":v).replace(/[^\d-]/g,""); return s ? (Number(s)||0) : 0; }
+/** Wires a text input to auto-format with "." thousand separators as the user types, keeping the cursor stable. */
+function attachThousandsInput(el){
+  if (!el || el.dataset.thousandsWired) return;
+  el.dataset.thousandsWired = "1";
+  el.addEventListener("input", ()=>{
+    const cursorFromEnd = el.value.length - (el.selectionStart==null?el.value.length:el.selectionStart);
+    const raw = parseIntInput(el.value);
+    const formatted = raw ? fmtInt(raw) : el.value.replace(/[^\d]/g,"");
+    el.value = formatted;
+    const pos = Math.max(0, formatted.length - cursorFromEnd);
+    try{ el.setSelectionRange(pos,pos); }catch(e){}
+  });
+}
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function monthKey(y,m){ return y+"-"+pad2(m); }
 function ymOf(dateStr){ return {y:Number(dateStr.slice(0,4)), m:Number(dateStr.slice(5,7))}; }
@@ -839,7 +844,7 @@ function renderEntry(){
             '<button type="button" class="chi" data-type="chi" aria-pressed="'+(type==="chi")+'">Chi</button>'+
           '</div></div>'+
           '<div class="field span2"><label for="f-cat">Danh mục</label><select id="f-cat" required></select></div>'+
-          '<div class="field span2"><label for="f-amount">Số tiền (₫)</label><input type="number" id="f-amount" min="0" step="1000" required value="'+(editing?editing.amount:"")+'"><div class="amount-preview" id="f-amount-preview">&nbsp;</div></div>'+
+          '<div class="field span2"><label for="f-amount">Số tiền (₫)</label><input type="text" inputmode="numeric" id="f-amount" required value="'+(editing?fmtInt(editing.amount):"")+'"><div class="amount-preview" id="f-amount-preview">&nbsp;</div></div>'+
           '<div class="field span2"><label for="f-desc">Diễn giải</label><input type="text" id="f-desc" placeholder="VD: Ăn trưa, tiền điện tháng 9…" value="'+(editing?esc(editing.desc):"")+'"></div>'+
           '<div class="field span2"><label for="f-method">Hình thức</label><select id="f-method"></select></div>'+
           '<div class="field span6"><label for="f-note">Ghi chú (không bắt buộc)</label><input type="text" id="f-note" value="'+(editing?esc(editing.note||""):"")+'"></div>'+
@@ -871,8 +876,9 @@ function renderEntry(){
   });
   const amtInput = document.getElementById("f-amount");
   const amtPreview = document.getElementById("f-amount-preview");
-  function updatePreview(){ amtPreview.textContent = amtInput.value ? fmtMoney(Number(amtInput.value)) : " "; }
-  amtInput.oninput = updatePreview; updatePreview();
+  attachThousandsInput(amtInput);
+  function updatePreview(){ const v = parseIntInput(amtInput.value); amtPreview.textContent = v ? fmtMoney(v) : " "; }
+  amtInput.addEventListener("input", updatePreview); updatePreview();
 
   document.getElementById("txForm").onsubmit = async (e)=>{
     e.preventDefault();
@@ -881,7 +887,7 @@ function renderEntry(){
       date: document.getElementById("f-date").value || todayISO(),
       type: t,
       category: document.getElementById("f-cat").value,
-      amount: Number(document.getElementById("f-amount").value)||0,
+      amount: parseIntInput(document.getElementById("f-amount").value),
       desc: document.getElementById("f-desc").value.trim(),
       method: document.getElementById("f-method").value,
       note: document.getElementById("f-note").value.trim()
@@ -999,17 +1005,29 @@ function csvEscape(v){
   const s = v==null ? "" : String(v);
   return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
 }
-function buildCsv(rows){
-  const lines = [CSV_COLS.join(",")];
-  rows.forEach(t=>{
-    lines.push(CSV_COLS.map(k=>csvEscape(k==="type" ? (t.type==="thu"?"thu":"chi") : t[k])).join(","));
-  });
+function csvSectionLines(name, header, dataRows){
+  const lines = ["#"+name];
+  if (header) lines.push(header.map(csvEscape).join(","));
+  dataRows.forEach(r=> lines.push(r.map(csvEscape).join(",")));
+  return lines;
+}
+/** Export file bundles the current settings (chung 1 file) plus the transaction list, in labelled CSV sections. */
+function buildExportCsv(settings, rows){
+  const s = settings || {};
+  const lines = [];
+  lines.push(...csvSectionLines("SETTINGS", ["year","openingBalance","savingsGoalPct","alertPct"], [[
+    s.year||"", s.openingBalance||0, Math.round((s.savingsGoalPct||0)*100), Math.round((s.alertPct||0)*100)
+  ]]));
+  lines.push(...csvSectionLines("EXPENSE_CATS", ["name","budget"], (s.expenseCats||[]).map(c=>[c.name, c.budget])));
+  lines.push(...csvSectionLines("INCOME_CATS", ["name"], (s.incomeCats||[]).map(c=>[c])));
+  lines.push(...csvSectionLines("METHODS", ["name"], (s.methods||[]).map(c=>[c])));
+  lines.push(...csvSectionLines("TRANSACTIONS", CSV_COLS, rows.map(t=>CSV_COLS.map(k=> k==="type" ? (t.type==="thu"?"thu":"chi") : t[k]))));
   return "﻿"+lines.join("\r\n");
 }
 async function doExport(){
   if (!S.tx.length){ toast("Chưa có giao dịch nào để xuất."); return; }
   const rows = S.tx.slice().sort((a,b)=> a.date<b.date?-1:(a.date>b.date?1:0));
-  const csv = buildCsv(rows);
+  const csv = buildExportCsv(S.settings, rows);
   const stamp = todayISO();
   const filename = "so-thu-chi-"+stamp+".csv";
 
@@ -1022,7 +1040,7 @@ async function doExport(){
       a.href = url; a.download = filename;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       setTimeout(()=>URL.revokeObjectURL(url), 1000);
-      toast("Đã xuất "+rows.length+" giao dịch ra file CSV.");
+      toast("Đã xuất "+rows.length+" giao dịch kèm cài đặt ra file CSV.");
     }catch(err){ toast("Không xuất được file, thử lại nhé."); }
     return;
   }
@@ -1030,7 +1048,7 @@ async function doExport(){
   if (!S.downloads){ toast("Tính năng xuất file không khả dụng ở đây."); return; }
   try{
     const res = await S.downloads.save({ filename, data: csv });
-    if (res.status==="saved") toast("Đã xuất "+rows.length+" giao dịch ra file CSV.");
+    if (res.status==="saved") toast("Đã xuất "+rows.length+" giao dịch kèm cài đặt ra file CSV.");
   }catch(err){
     const code = err && err.code;
     if (code==="declined") return;
@@ -1058,6 +1076,55 @@ function parseCsv(text){
   }
   if (field.length || row.length){ row.push(field); rows.push(row); }
   return rows.filter(r => !(r.length===1 && r[0].trim()===""));
+}
+/** Splits a parsed CSV table into named sections using "#SECTION_NAME" marker rows.
+ *  Files exported before this feature have no markers — everything before the first marker
+ *  (i.e. the whole file) is collected under __LEGACY__ so old exports still import fine. */
+function splitCsvSections(table){
+  const sections = {}; let cur = null;
+  table.forEach(row=>{
+    if (row.length===1 && /^#[A-Z_]+$/.test(String(row[0]||"").trim())){
+      cur = String(row[0]).trim().slice(1);
+      sections[cur] = [];
+    } else if (cur){
+      sections[cur].push(row);
+    } else {
+      (sections.__LEGACY__ = sections.__LEGACY__ || []).push(row);
+    }
+  });
+  return sections;
+}
+function parseImportedSettings(sections){
+  if (!sections.SETTINGS || sections.SETTINGS.length<2) return null;
+  const header = sections.SETTINGS[0].map(h=>String(h).trim());
+  const row = sections.SETTINGS[1];
+  const val = k=> row[header.indexOf(k)];
+  const settings = {
+    year: Number(val("year"))||new Date().getFullYear(),
+    openingBalance: Number(val("openingBalance"))||0,
+    savingsGoalPct: Math.max(0,Math.min(100,Number(val("savingsGoalPct"))||0))/100,
+    alertPct: Math.max(0,Math.min(100,Number(val("alertPct"))||0))/100,
+    expenseCats: [], incomeCats: [], methods: [], seeded: true
+  };
+  if (sections.EXPENSE_CATS && sections.EXPENSE_CATS.length>1){
+    const h = sections.EXPENSE_CATS[0].map(x=>String(x).trim());
+    const ni=h.indexOf("name"), bi=h.indexOf("budget");
+    settings.expenseCats = sections.EXPENSE_CATS.slice(1)
+      .filter(r=>r.some(c=>String(c).trim()!==""))
+      .map(r=>({name:String(r[ni]||"").trim(), budget:Number(r[bi])||0}))
+      .filter(c=>c.name);
+  }
+  if (sections.INCOME_CATS && sections.INCOME_CATS.length>1){
+    const h = sections.INCOME_CATS[0].map(x=>String(x).trim());
+    const ni=h.indexOf("name");
+    settings.incomeCats = sections.INCOME_CATS.slice(1).map(r=>String(r[ni]||"").trim()).filter(Boolean);
+  }
+  if (sections.METHODS && sections.METHODS.length>1){
+    const h = sections.METHODS[0].map(x=>String(x).trim());
+    const ni=h.indexOf("name");
+    settings.methods = sections.METHODS.slice(1).map(r=>String(r[ni]||"").trim()).filter(Boolean);
+  }
+  return settings;
 }
 function normType(v){
   const s = String(v||"").trim().toLowerCase();
@@ -1090,37 +1157,52 @@ function handleImportFile(file){
     const text = String(reader.result||"");
     const table = parseCsv(text);
     if (!table.length){ toast("File CSV trống hoặc không đọc được."); return; }
-    const header = table[0].map(h=>h.trim().toLowerCase());
-    const idx = { date:header.indexOf("date"), type:header.indexOf("type"), category:header.indexOf("category"), amount:header.indexOf("amount"), desc:header.indexOf("desc"), method:header.indexOf("method"), note:header.indexOf("note") };
-    if (idx.date<0 || idx.type<0 || idx.category<0 || idx.amount<0){
-      toast("File CSV cần có các cột: date, type, category, amount."); return;
+    const sections = splitCsvSections(table);
+    const txTable = sections.TRANSACTIONS || sections.__LEGACY__;
+    const importedSettings = parseImportedSettings(sections);
+    if (!txTable || !txTable.length){
+      if (!importedSettings){ toast("File CSV không có dữ liệu để nhập."); return; }
     }
-    const dataRows = table.slice(1);
-    const valid = []; let bad = 0;
-    dataRows.forEach(r=>{
-      if (!r.some(c=>String(c).trim()!=="")) return;
-      const date = normDate(idx.date>=0? r[idx.date]:"");
-      const type = normType(idx.type>=0? r[idx.type]:"");
-      const category = (idx.category>=0? r[idx.category]:"").trim();
-      const amount = normAmount(idx.amount>=0? r[idx.amount]:"");
-      if (!date || !type || !category || !amount || amount<=0){ bad++; return; }
-      valid.push({
-        date, type, category, amount,
-        desc: idx.desc>=0 ? (r[idx.desc]||"").trim() : "",
-        method: idx.method>=0 ? (r[idx.method]||"").trim() : "",
-        note: idx.note>=0 ? (r[idx.note]||"").trim() : "",
-        createdAt: new Date().toISOString()
-      });
-    });
-    if (!valid.length){ toast("Không có dòng hợp lệ nào trong file để nhập."); return; }
+    let valid = [], bad = 0;
+    if (txTable && txTable.length){
+      const header = txTable[0].map(h=>h.trim().toLowerCase());
+      const idx = { date:header.indexOf("date"), type:header.indexOf("type"), category:header.indexOf("category"), amount:header.indexOf("amount"), desc:header.indexOf("desc"), method:header.indexOf("method"), note:header.indexOf("note") };
+      if (idx.date<0 || idx.type<0 || idx.category<0 || idx.amount<0){
+        if (!importedSettings){ toast("File CSV cần có các cột: date, type, category, amount."); return; }
+      } else {
+        const dataRows = txTable.slice(1);
+        dataRows.forEach(r=>{
+          if (!r.some(c=>String(c).trim()!=="")) return;
+          const date = normDate(idx.date>=0? r[idx.date]:"");
+          const type = normType(idx.type>=0? r[idx.type]:"");
+          const category = (idx.category>=0? r[idx.category]:"").trim();
+          const amount = normAmount(idx.amount>=0? r[idx.amount]:"");
+          if (!date || !type || !category || !amount || amount<=0){ bad++; return; }
+          valid.push({
+            date, type, category, amount,
+            desc: idx.desc>=0 ? (r[idx.desc]||"").trim() : "",
+            method: idx.method>=0 ? (r[idx.method]||"").trim() : "",
+            note: idx.note>=0 ? (r[idx.note]||"").trim() : "",
+            createdAt: new Date().toISOString()
+          });
+        });
+      }
+    }
+    if (!valid.length && !importedSettings){ toast("Không có dòng hợp lệ nào trong file để nhập."); return; }
     S.importing = true;
     renderSettingsView();
     try{
+      const parts = [];
+      if (importedSettings){
+        try{ await S.db.doc("app/settings").set(importedSettings); parts.push("cài đặt"); }catch(e){}
+      }
       let ok = 0;
       for (const t of valid){
         try{ await S.db.collection("transactions").add(t); ok++; }catch(e){}
       }
-      toast("Đã nhập "+ok+" giao dịch"+(bad?(", bỏ qua "+bad+" dòng không hợp lệ"):"")+".");
+      if (ok) parts.push(ok+" giao dịch");
+      const msg = parts.length ? ("Đã nhập "+parts.join(" và ")+(bad?(", bỏ qua "+bad+" dòng không hợp lệ"):"")+".") : "Không có gì để nhập.";
+      toast(msg);
     } finally {
       S.importing = false;
       renderSettingsView();
@@ -1134,7 +1216,7 @@ function renderSettingsView(){
   const root = document.querySelector('[data-view="settings"]');
   const s = S.settings;
   const expRows = (s.expenseCats||[]).map((c,i)=>
-    '<div class="cat-row" data-i="'+i+'"><input type="text" class="exp-name" value="'+esc(c.name)+'"><input type="number" class="exp-budget mono" min="0" step="50000" value="'+c.budget+'"><button type="button" class="icon-btn" data-remove="exp" data-i="'+i+'">✕</button></div>'
+    '<div class="cat-row" data-i="'+i+'"><input type="text" class="exp-name" value="'+esc(c.name)+'"><input type="text" inputmode="numeric" class="exp-budget mono" value="'+fmtInt(c.budget)+'"><button type="button" class="icon-btn" data-remove="exp" data-i="'+i+'">✕</button></div>'
   ).join("");
   const incRows = (s.incomeCats||[]).map((c,i)=>
     '<div class="cat-row" style="grid-template-columns:1fr 34px;" data-i="'+i+'"><input type="text" class="inc-name" value="'+esc(c)+'"><button type="button" class="icon-btn" data-remove="inc" data-i="'+i+'">✕</button></div>'
@@ -1150,7 +1232,7 @@ function renderSettingsView(){
         '<div class="section-title">Thông số chung</div>'+
         '<div class="stack">'+
           '<div class="field"><label for="st-year">Năm theo dõi</label><input type="number" id="st-year" value="'+s.year+'"></div>'+
-          '<div class="field"><label for="st-open">Số dư đầu kỳ (₫)</label><input type="number" id="st-open" step="100000" value="'+s.openingBalance+'"></div>'+
+          '<div class="field"><label for="st-open">Số dư đầu kỳ (₫)</label><input type="text" inputmode="numeric" id="st-open" value="'+fmtInt(s.openingBalance)+'"></div>'+
           '<div class="field"><label for="st-goal">Mục tiêu tiết kiệm (%)</label><input type="number" id="st-goal" min="0" max="100" value="'+Math.round(s.savingsGoalPct*100)+'"></div>'+
           '<div class="field"><label for="st-alert">Ngưỡng cảnh báo ngân sách (%)</label><input type="number" id="st-alert" min="0" max="100" value="'+Math.round(s.alertPct*100)+'"></div>'+
         '</div>'+
@@ -1163,6 +1245,7 @@ function renderSettingsView(){
           '<input type="file" id="importCsvInput" accept=".csv,text/csv" style="display:none">'+
           (sampleCount? '<button type="button" class="btn btn-danger" id="clearSample">Xóa dữ liệu mẫu</button>' : '')+
           (S.tx.length? '<button type="button" class="btn btn-danger" id="clearAll">'+(S.clearAllArm?"Xác nhận xóa toàn bộ?":"Xóa toàn bộ giao dịch")+'</button>' : '')+
+          '<button type="button" class="btn btn-primary" id="saveSettings">Lưu cài đặt</button>'+
         '</div>'+
       '</div>'+
     '</div>'+
@@ -1184,27 +1267,27 @@ function renderSettingsView(){
           '<button type="button" class="btn btn-sm" id="addMeth">+ Thêm hình thức</button>'+
         '</div>'+
       '</div>'+
-    '</div>'+
-    '<div class="row" style="justify-content:flex-end;">'+
-      '<button type="button" class="btn btn-primary" id="saveSettings">Lưu cài đặt</button>'+
     '</div>';
 
+  attachThousandsInput(document.getElementById("st-open"));
+
   function computeExpTotal(){
-    let t=0; root.querySelectorAll(".exp-budget").forEach(i=>t+=Number(i.value)||0);
+    let t=0; root.querySelectorAll(".exp-budget").forEach(i=>t+=parseIntInput(i.value));
     document.getElementById("expTotal").textContent = fmtMoney(t);
   }
   computeExpTotal();
-  root.querySelectorAll(".exp-budget").forEach(i=>{ i.oninput = computeExpTotal; });
+  root.querySelectorAll(".exp-budget").forEach(i=>{ attachThousandsInput(i); i.addEventListener("input", computeExpTotal); });
 
   root.querySelectorAll('[data-remove]').forEach(b=>{
     b.onclick = ()=>{ b.closest(".cat-row").remove(); computeExpTotal(); };
   });
   document.getElementById("addExp").onclick = ()=>{
     const row = document.createElement("div"); row.className="cat-row";
-    row.innerHTML = '<input type="text" class="exp-name" placeholder="Tên danh mục"><input type="number" class="exp-budget mono" min="0" step="50000" value="0"><button type="button" class="icon-btn" data-remove="exp">✕</button>';
+    row.innerHTML = '<input type="text" class="exp-name" placeholder="Tên danh mục"><input type="text" inputmode="numeric" class="exp-budget mono" value="0"><button type="button" class="icon-btn" data-remove="exp">✕</button>';
     document.getElementById("expList").appendChild(row);
     row.querySelector("[data-remove]").onclick = ()=>{ row.remove(); computeExpTotal(); };
-    row.querySelector(".exp-budget").oninput = computeExpTotal;
+    attachThousandsInput(row.querySelector(".exp-budget"));
+    row.querySelector(".exp-budget").addEventListener("input", computeExpTotal);
     row.querySelector(".exp-name").focus();
   };
   document.getElementById("addInc").onclick = ()=>{
@@ -1261,12 +1344,12 @@ function renderSettingsView(){
   };
 
   document.getElementById("saveSettings").onclick = async ()=>{
-    const expenseCats = Array.from(root.querySelectorAll(".exp-name")).map((el,i)=>({name:el.value.trim(), budget:Number(root.querySelectorAll(".exp-budget")[i].value)||0})).filter(c=>c.name);
+    const expenseCats = Array.from(root.querySelectorAll(".exp-name")).map((el,i)=>({name:el.value.trim(), budget:parseIntInput(root.querySelectorAll(".exp-budget")[i].value)})).filter(c=>c.name);
     const incomeCats = Array.from(root.querySelectorAll(".inc-name")).map(el=>el.value.trim()).filter(Boolean);
     const methods = Array.from(root.querySelectorAll(".meth-name")).map(el=>el.value.trim()).filter(Boolean);
     const newSettings = {
       year: Number(document.getElementById("st-year").value)||new Date().getFullYear(),
-      openingBalance: Number(document.getElementById("st-open").value)||0,
+      openingBalance: parseIntInput(document.getElementById("st-open").value),
       savingsGoalPct: Math.max(0,Math.min(100,Number(document.getElementById("st-goal").value)||0))/100,
       alertPct: Math.max(0,Math.min(100,Number(document.getElementById("st-alert").value)||0))/100,
       expenseCats, incomeCats, methods, seeded:true
@@ -1292,6 +1375,4 @@ renderTabs();
 boot();
 })();
 </script>
-
-</body>
-</html>
+</body></html>
