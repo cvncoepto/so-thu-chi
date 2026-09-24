@@ -772,7 +772,7 @@ function renderDashboard(){
       '</div>'+
     '</div>';
 
-  resizeTrendChartToRealWidth(root.querySelector(".chart-svg"), trendRows, "Thu","Chi","var(--ser-thu)","var(--ser-chi)", 11.5);
+  resizeBarChartToRealWidth(root.querySelector(".chart-svg"), trendRows, "Thu","Chi","var(--ser-thu)","var(--ser-chi)", 11.5);
   bindPeriodPicker("dash", (y,m)=>{ S.dashY=y; S.dashM=m; renderDashboard(); });
 }
 
@@ -842,7 +842,7 @@ function shortNum(v){ if(v>=1e9) return (v/1e9).toFixed(v%1e9?1:0)+"tỷ"; if(v>
 // the chart once more at its REAL measured pixel width (scale becomes 1:1) so the axis text ends
 // up genuinely the same size as the legend, on both PC and mobile — not just "the same declared
 // CSS value".
-function resizeTrendChartToRealWidth(svgEl, rows, labelA, labelB, colorA, colorB, fontPx){
+function resizeBarChartToRealWidth(svgEl, rows, labelA, labelB, colorA, colorB, fontPx){
   if(!svgEl) return;
   const rect = svgEl.getBoundingClientRect();
   if(!rect.width) return;
@@ -1009,7 +1009,8 @@ function renderMonthly(){
   const rateYear = totalThu>0 ? (totalThu-totalChi)/totalThu : 0;
   const totalRow = '<tr class="total"><td>Cả năm</td><td class="mono">'+fmtMoney(totalThu)+'</td><td class="mono">'+fmtMoney(totalChi)+'</td><td class="mono">'+fmtMoney(totalThu-totalChi)+'</td><td class="mono">'+fmtPct(rateYear)+'</td><td class="mono">'+fmtMoney(rows[11].cum)+'</td></tr>';
 
-  const barSvg = groupedBarSvg(rows.map(r=>({label:"T"+r.m,a:r.thu,b:r.chi})), "Thu","Chi","var(--ser-thu)","var(--ser-chi)");
+  const barRows = rows.map(r=>({label:"T"+r.m,a:r.thu,b:r.chi}));
+  const barSvg = groupedBarSvg(barRows, "Thu","Chi","var(--ser-thu)","var(--ser-chi)", undefined, 11.5);
 
   const cats = (S.settings.expenseCats||[]).map(c=>{
     const vals = rows.map(r=>{ let s=0; S.tx.forEach(t=>{ if(t.type==="chi"&&t.category===c.name){ const p=ymOf(t.date); if(p.y===y&&p.m===r.m) s+=Number(t.amount)||0; } }); return s; });
@@ -1034,6 +1035,7 @@ function renderMonthly(){
       (cats.length? '<div class="tbl-wrap"><table><thead>'+matrixHead+'</thead><tbody>'+matrixRows+'</tbody></table></div>' : '<div class="empty">Chưa có dữ liệu chi tiêu trong năm này.</div>')+
     '</div>';
 
+  resizeBarChartToRealWidth(root.querySelector(".chart-svg"), barRows, "Thu","Chi","var(--ser-thu)","var(--ser-chi)", 11.5);
   document.getElementById("monthlyYear").onchange = (e)=>{ S.dashY = Number(e.target.value); renderMonthly(); };
 }
 
