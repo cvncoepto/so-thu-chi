@@ -62,7 +62,7 @@
 }
 *{box-sizing:border-box;}
 body{background:var(--bg); color:var(--ink); font-family:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;}
-.mono{font-family:"IBM Plex Mono","SFMono-Regular",Menlo,"Liberation Mono","Courier New",ui-monospace,monospace; font-variant-numeric:tabular-nums;}
+.mono{font-variant-numeric:tabular-nums;}
 .disp{font-family:"Fraunces",Georgia,serif;}
 #app{max-width:1080px; margin:0 auto; padding-inline:16px; padding-block:18px 64px;}
 h1,h2,h3{margin:0; text-wrap:balance;}
@@ -174,8 +174,8 @@ a{color:inherit;}
 
 /* ---------- bar chart ---------- */
 .chart-svg{width:100%; height:auto; display:block;}
-.chart-svg text{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:9.5px; fill:var(--muted);}
-.chart-legend{display:flex; gap:16px; font-size:12px; color:var(--ink-2); margin-top:8px;}
+.chart-svg text{font-size:12.5px; fill:var(--muted);}
+.chart-legend{display:flex; gap:16px; font-size:12.5px; color:var(--ink-2); margin-top:8px;}
 .chart-legend .li{display:flex; align-items:center; gap:6px;}
 .chart-legend .sw{width:10px; height:10px; border-radius:3px;}
 
@@ -793,7 +793,7 @@ function donutHtml(slices, total){
 }
 
 function groupedBarSvg(rows, labelA, labelB, colorA, colorB){
-  const W=640,H=190, padL=48,padR=10,padT=14,padB=24;
+  const W=640,H=238, padL=54,padR=10,padT=16,padB=28;
   const max = Math.max(1, ...rows.map(r=>Math.max(r.a,r.b)));
   const niceMax = niceCeil(max);
   const plotW = W-padL-padR, plotH = H-padT-padB;
