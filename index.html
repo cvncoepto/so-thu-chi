@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="vi">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sổ Thu Chi</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <!-- Only needed for the standalone (Netlify) version — login via Google through Auth0. Harmless if left in. -->
@@ -39,7 +39,10 @@
     --st-crit:#e66767; --st-crit-soft:rgba(230,103,103,.2);
     --ser-thu:#3fae3f; --ser-chi:#e66767;
     --cat-0:#3987e5; --cat-1:#d95926; --cat-2:#199e70; --cat-3:#c98500; --cat-4:#d55181; --cat-5:#9085e9; --cat-khac:#84928c;
-    --seq-1:#1c2c3d; --seq-2:#22436c; --seq-3:#2a5c96; --seq-4:#3987e5; --seq-5:#8fc0f7;
+    /* Reversed vs. the source blues (#1c2c3d…#8fc0f7): "Xu hướng"/danh mục × tháng heatmap
+       reads darker = more, same direction as light mode, so --seq-1 stays the palest stop and
+       --seq-5 the deepest in both themes. */
+    --seq-1:#8fc0f7; --seq-2:#3987e5; --seq-3:#2a5c96; --seq-4:#22436c; --seq-5:#1c2c3d;
     --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 20px -10px rgba(0,0,0,.5);
     color-scheme: dark;
   }
@@ -56,13 +59,13 @@
   --st-crit:#e66767; --st-crit-soft:rgba(230,103,103,.2);
   --ser-thu:#3fae3f; --ser-chi:#e66767;
   --cat-0:#3987e5; --cat-1:#d95926; --cat-2:#199e70; --cat-3:#c98500; --cat-4:#d55181; --cat-5:#9085e9; --cat-khac:#84928c;
-  --seq-1:#1c2c3d; --seq-2:#22436c; --seq-3:#2a5c96; --seq-4:#3987e5; --seq-5:#8fc0f7;
+  --seq-1:#8fc0f7; --seq-2:#3987e5; --seq-3:#2a5c96; --seq-4:#22436c; --seq-5:#1c2c3d;
   --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 20px -10px rgba(0,0,0,.5);
   color-scheme: dark;
 }
 *{box-sizing:border-box;}
 body{background:var(--bg); color:var(--ink); font-family:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;}
-.mono{font-family:"IBM Plex Mono","SFMono-Regular",Menlo,"Liberation Mono","Courier New",ui-monospace,monospace; font-variant-numeric:tabular-nums; font-feature-settings:"zero" 0;}
+.mono{font-variant-numeric:tabular-nums;}
 .disp{font-family:"Fraunces",Georgia,serif;}
 #app{max-width:1080px; margin:0 auto; padding-inline:16px; padding-block:18px 64px;}
 h1,h2,h3{margin:0; text-wrap:balance;}
@@ -97,14 +100,15 @@ a{color:inherit;}
 
 /* ---------- cards / layout ---------- */
 .card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:var(--shadow);}
-.grid{display:grid; gap:14px;}
+.grid{display:grid; gap:10px;}
 .g-kpi{grid-template-columns:repeat(4,1fr);}
 .g-2{grid-template-columns:1.3fr 1fr;}
 .g-2b{grid-template-columns:1fr 1fr;}
 @media (max-width:860px){ .g-kpi{grid-template-columns:repeat(2,1fr);} .g-2,.g-2b{grid-template-columns:1fr;} }
 .section-title{font-size:15px; font-weight:600; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;}
 .section-title .hint{font-size:12px; font-weight:400; color:var(--muted);}
-.stack{display:flex; flex-direction:column; gap:14px;}
+.stack{display:flex; flex-direction:column; gap:10px;}
+.card > .stack{gap:14px;}
 .row{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
 .spacer{flex:1;}
 
@@ -114,7 +118,7 @@ a{color:inherit;}
 .period select{border:none; background:transparent; color:var(--ink); font-weight:600; font-size:13.5px; padding:4px 2px;}
 
 /* ---------- KPI tiles ---------- */
-.kpi{padding:16px; border-radius:14px; border:1px solid var(--line); background:var(--surface); position:relative;}
+.kpi{padding:16px; border-radius:14px; border:1px solid var(--line); background:var(--surface); position:relative; min-width:0;}
 .kpi::before{content:""; position:absolute; inset:0 0 auto 0; height:3px; border-radius:14px 14px 0 0; background:var(--bar,var(--accent));}
 .kpi .lbl{font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);}
 .kpi .val{font-size:23px; font-weight:600; margin-top:8px; color:var(--fg,var(--ink)); white-space:nowrap; font-variant-numeric:tabular-nums;}
@@ -128,6 +132,7 @@ a{color:inherit;}
 .year-band{border:1.5px solid var(--accent); background:linear-gradient(135deg, var(--accent-soft), var(--surface) 45%);}
 .year-band .section-title{color:var(--accent-strong);}
 .year-content{display:grid; grid-template-columns:2fr 3fr; gap:22px; align-items:center; margin-top:16px;}
+.year-content > *{min-width:0;}
 .year-hero{border-right:1px solid var(--line); padding-right:22px;}
 .year-hero .lbl{font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-2);}
 .year-hero .val{font-size:34px; font-weight:600; margin-top:6px; color:var(--accent-strong); white-space:nowrap; font-variant-numeric:tabular-nums;}
@@ -136,7 +141,7 @@ a{color:inherit;}
 .subhead{font-size:11.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-bottom:10px;}
 @media (max-width:760px){ .year-content{grid-template-columns:1fr;} .year-hero{border-right:none; border-bottom:1px solid var(--line); padding-right:0; padding-bottom:16px; margin-bottom:2px;} }
 @media (max-width:760px){ .year-hero .val{font-size:min(34px,8vw);} }
-@media (max-width:600px){ .year-kpis{gap:8px;} .year-kpis .kpi{padding:10px;} .year-kpis .kpi .val{font-size:clamp(11px,3.8vw,23px);} .year-kpis .kpi .lbl{font-size:10px;} .year-kpis .kpi .sub{font-size:10.5px;} }
+@media (max-width:600px){ .year-kpis{gap:8px;} .year-kpis .kpi{padding:10px;} .year-kpis .kpi .val{font-size:clamp(11px,3.8vw,23px); overflow:hidden; text-overflow:ellipsis;} .year-kpis .kpi .lbl{font-size:10px;} .year-kpis .kpi .sub{font-size:10.5px;} }
 
 /* ---------- pills ---------- */
 .pill{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:4px 10px 4px 8px; border-radius:999px; background:var(--surface-2); color:var(--ink);}
@@ -172,8 +177,8 @@ a{color:inherit;}
 
 /* ---------- bar chart ---------- */
 .chart-svg{width:100%; height:auto; display:block;}
-.chart-svg text{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:9.5px; fill:var(--muted);}
-.chart-legend{display:flex; gap:16px; font-size:12px; color:var(--ink-2); margin-top:8px;}
+.chart-svg text{font-size:12.5px; fill:var(--muted);}
+.chart-legend{display:flex; gap:16px; font-size:12.5px; color:var(--ink-2); margin-top:8px;}
 .chart-legend .li{display:flex; align-items:center; gap:6px;}
 .chart-legend .sw{width:10px; height:10px; border-radius:3px;}
 
@@ -216,7 +221,6 @@ tr.total td{font-weight:700; background:var(--surface-2);}
 .data-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;}
 .data-actions .btn{flex:1 1 150px;}
 @media (max-width:480px){ .data-actions{flex-direction:column;} .data-actions .btn{flex:1 1 auto;} }
-@media (max-width:760px){ .data-card{display:none;} }
 .btn:hover{border-color:var(--accent);}
 .btn-primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
 .btn-primary:hover{background:var(--accent-strong); border-color:var(--accent-strong);}
@@ -250,7 +254,7 @@ tr.total td{font-weight:700; background:var(--surface-2);}
 .lock-card h2{font-size:19px; font-weight:600; margin-bottom:8px;}
 .lock-card p{font-size:13.5px; color:var(--ink-2); line-height:1.55; margin-bottom:22px;}
 [data-view]{display:none;}
-[data-view].active{display:block;}
+[data-view].active{display:flex;}
 @media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important;} }
 </style>
 
@@ -289,8 +293,24 @@ tr.total td{font-weight:700; background:var(--surface-2);}
 /* ================= utilities ================= */
 function pad2(n){return String(n).padStart(2,"0");}
 function todayISO(){const d=new Date(); return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());}
-function fmtMoney(n){ n = Number(n)||0; const neg = n<0; const s = Math.round(Math.abs(n)).toLocaleString("vi-VN"); return (neg?"-":"")+s+" ₫"; }
+function fmtMoney(n){ n = Number(n)||0; const neg = n<0; const s = Math.round(Math.abs(n)).toLocaleString("vi-VN"); return (neg?"-":"")+s; }
 function fmtPct(n){ return Math.round((Number(n)||0)*100)+"%"; }
+/** Thousand/million separators for editable amount fields (not used for years). */
+function fmtInt(n){ n = Math.round(Number(n)||0); return n.toLocaleString("vi-VN"); }
+function parseIntInput(v){ const s = String(v==null?"":v).replace(/[^\d-]/g,""); return s ? (Number(s)||0) : 0; }
+/** Wires a text input to auto-format with "." thousand separators as the user types, keeping the cursor stable. */
+function attachThousandsInput(el){
+  if (!el || el.dataset.thousandsWired) return;
+  el.dataset.thousandsWired = "1";
+  el.addEventListener("input", ()=>{
+    const cursorFromEnd = el.value.length - (el.selectionStart==null?el.value.length:el.selectionStart);
+    const raw = parseIntInput(el.value);
+    const formatted = raw ? fmtInt(raw) : el.value.replace(/[^\d]/g,"");
+    el.value = formatted;
+    const pos = Math.max(0, formatted.length - cursorFromEnd);
+    try{ el.setSelectionRange(pos,pos); }catch(e){}
+  });
+}
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function monthKey(y,m){ return y+"-"+pad2(m); }
 function ymOf(dateStr){ return {y:Number(dateStr.slice(0,4)), m:Number(dateStr.slice(5,7))}; }
@@ -421,9 +441,12 @@ function isLocked(){
 function doLogin(){
   if (typeof window.claude === "undefined"){
     if (auth0Client){
-      // prompt:"login" forces Google to show the account chooser / password prompt every time,
-      // instead of silently reusing whatever Google session is already active in the browser.
-      auth0Client.loginWithRedirect({ authorizationParams: { connection: "google-oauth2", prompt: "login" } });
+      // Google's authorize endpoint only understands prompt=none|consent|select_account — it silently
+      // ignores "login" (that's an Auth0/OIDC value, not a Google one), which is why that value did
+      // nothing. select_account is the closest Google offers: it always shows the account chooser
+      // instead of silently reusing the active Google session, so a second Google account (or "sign
+      // in with another account") is always one explicit click away rather than automatic.
+      auth0Client.loginWithRedirect({ authorizationParams: { connection: "google-oauth2", prompt: "select_account" } });
     } else {
       toast("Chưa cấu hình đăng nhập Google — điền AUTH0_DOMAIN và AUTH0_CLIENT_ID ở đầu file rồi deploy lại.");
     }
@@ -440,11 +463,8 @@ function renderLockScreen(){
     '<div class="card lock-card">'+
       '<div class="lock-icon">🔒</div>'+
       '<h2 class="disp">Nội dung riêng tư</h2>'+
-      '<p>Đăng nhập bằng Google để xem và quản lý sổ thu chi của bạn. Người khác mở đường dẫn này sẽ không thấy được dữ liệu.</p>'+
-      '<button type="button" class="btn btn-primary" id="lockLoginBtn">Đăng nhập bằng Google</button>'+
+      '<p>Nhấn "Đăng nhập bằng Google" ở góc trên bên phải để xem và quản lý sổ thu chi của bạn. Người khác mở đường dẫn này sẽ không thấy được dữ liệu.</p>'+
     '</div>';
-  const btn = document.getElementById("lockLoginBtn");
-  if (btn) btn.onclick = doLogin;
 }
 
 /* ================= real storage for the standalone (Netlify) version =================
@@ -710,7 +730,8 @@ function renderDashboard(){
 
   const trendMonths = monthsBack(y,m,6);
   const trendData = trendMonths.map(({y,m})=>Object.assign({y,m}, monthTotals(y,m)));
-  const trendSvg = groupedBarSvg(trendData.map(d=>({label:"T"+d.m, a:d.thu, b:d.chi})), "Thu","Chi","var(--ser-thu)","var(--ser-chi)");
+  const trendRows = trendData.map(d=>({label:"T"+d.m, a:d.thu, b:d.chi}));
+  const trendSvg = groupedBarSvg(trendRows, "Thu","Chi","var(--ser-thu)","var(--ser-chi)", undefined, 11.5);
 
   const yearRows = yearMonthsSeries(y);
   const yearBalance = yearRows[11].cum;
@@ -741,17 +762,20 @@ function renderDashboard(){
         '<div class="section-title">Ngân sách theo danh mục<span class="hint">Đã chi so với hạn mức</span></div>'+
         (budgetRows || '<div class="empty">Chưa có danh mục chi nào được thiết lập.</div>')+
       '</div>'+
-      '<div class="card">'+
-        '<div class="section-title">Cơ cấu chi tiêu</div>'+
-        (slices.length ? donutHtml(slices, totalSpent) : '<div class="empty">Chưa có khoản chi nào trong tháng này.</div>')+
+      '<div class="stack">'+
+        '<div class="card">'+
+          '<div class="section-title">Cơ cấu chi tiêu</div>'+
+          (slices.length ? donutHtml(slices, totalSpent) : '<div class="empty">Chưa có khoản chi nào trong tháng này.</div>')+
+        '</div>'+
+        '<div class="card">'+
+          '<div class="section-title">Xu hướng 6 tháng gần đây</div>'+
+          trendSvg+
+          '<div class="chart-legend"><span class="li"><i class="sw" style="background:var(--ser-thu)"></i>Thu</span><span class="li"><i class="sw" style="background:var(--ser-chi)"></i>Chi</span></div>'+
+        '</div>'+
       '</div>'+
-    '</div>'+
-    '<div class="card">'+
-      '<div class="section-title">Xu hướng 6 tháng gần đây</div>'+
-      trendSvg+
-      '<div class="chart-legend"><span class="li"><i class="sw" style="background:var(--ser-thu)"></i>Thu</span><span class="li"><i class="sw" style="background:var(--ser-chi)"></i>Chi</span></div>'+
     '</div>';
 
+  resizeBarChartToRealWidth(root.querySelector(".chart-svg"), trendRows, "Thu","Chi","var(--ser-thu)","var(--ser-chi)", 11.5);
   bindPeriodPicker("dash", (y,m)=>{ S.dashY=y; S.dashM=m; renderDashboard(); });
 }
 
@@ -773,8 +797,18 @@ function donutHtml(slices, total){
   return '<div class="donut-wrap"><div class="donut" style="background:'+grad+'"><div class="hole"><div class="n mono">'+fmtMoney(total)+'</div><div class="l">tổng chi</div></div></div><div class="legend">'+legend+'</div></div>';
 }
 
-function groupedBarSvg(rows, labelA, labelB, colorA, colorB){
-  const W=640,H=190, padL=48,padR=10,padT=14,padB=24;
+function groupedBarSvg(rows, labelA, labelB, colorA, colorB, widthPx, fontPx){
+  // Taller on PC (matches the .g-2 two-column breakpoint elsewhere): +1.25x again on top of the mobile height.
+  const isDesktop = typeof window!=="undefined" && window.matchMedia && window.matchMedia("(min-width:861px)").matches;
+  // widthPx (optional): the card's REAL measured pixel width. When given, the viewBox is set to
+  // exactly that width so the SVG renders 1:1 with no responsive scale-down — otherwise <text>
+  // font-size (declared in SVG user units) gets shrunk along with everything else and ends up
+  // visibly smaller than same-declared-size HTML text (e.g. the Thu/Chi legend below the chart).
+  // fontPx (optional): overrides the CSS-declared .chart-svg text font-size (12.5px) for this
+  // instance only — only meaningful once widthPx makes the SVG 1:1, since otherwise it would
+  // just get scaled again like the CSS default does.
+  const W=widthPx||640, H=isDesktop?298:238, padL=54,padR=10,padT=isDesktop?18:16,padB=isDesktop?32:28;
+  const textAttr = fontPx ? ' style="font-size:'+fontPx+'px"' : '';
   const max = Math.max(1, ...rows.map(r=>Math.max(r.a,r.b)));
   const niceMax = niceCeil(max);
   const plotW = W-padL-padR, plotH = H-padT-padB;
@@ -787,7 +821,7 @@ function groupedBarSvg(rows, labelA, labelB, colorA, colorB){
     const yy = padT + plotH - (plotH*i/gridN);
     const val = niceMax*i/gridN;
     grid += '<line x1="'+padL+'" x2="'+(W-padR)+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--line)" stroke-width="1"/>';
-    grid += '<text x="'+(padL-6)+'" y="'+(yy+3)+'" text-anchor="end">'+shortNum(val)+'</text>';
+    grid += '<text x="'+(padL-6)+'" y="'+(yy+3)+'"'+textAttr+' text-anchor="end">'+shortNum(val)+'</text>';
   }
   let bars = "";
   rows.forEach((r,i)=>{
@@ -796,12 +830,27 @@ function groupedBarSvg(rows, labelA, labelB, colorA, colorB){
     const xa = gx + groupW/2 - barW - 2, xb = gx + groupW/2 + 2;
     bars += '<rect x="'+xa+'" y="'+(y0-ha)+'" width="'+barW+'" height="'+Math.max(0,ha)+'" rx="2" fill="'+colorA+'"><title>'+labelA+' '+r.label+': '+fmtMoney(r.a)+'</title></rect>';
     bars += '<rect x="'+xb+'" y="'+(y0-hb)+'" width="'+barW+'" height="'+Math.max(0,hb)+'" rx="2" fill="'+colorB+'"><title>'+labelB+' '+r.label+': '+fmtMoney(r.b)+'</title></rect>';
-    bars += '<text x="'+(gx+groupW/2)+'" y="'+(H-6)+'" text-anchor="middle">'+esc(r.label)+'</text>';
+    bars += '<text x="'+(gx+groupW/2)+'" y="'+(H-6)+'"'+textAttr+' text-anchor="middle">'+esc(r.label)+'</text>';
   });
   return '<svg class="chart-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Biểu đồ thu chi theo tháng">'+grid+bars+'</svg>';
 }
 function niceCeil(v){ const p=Math.pow(10,Math.floor(Math.log10(Math.max(v,1)))); const n=v/p; const f = n<=1?1:n<=2?2:n<=5?5:10; return f*p; }
 function shortNum(v){ if(v>=1e9) return (v/1e9).toFixed(v%1e9?1:0)+"tỷ"; if(v>=1e6) return (v/1e6).toFixed(v%1e6?1:0)+"tr"; if(v>=1e3) return (v/1e3).toFixed(0)+"k"; return String(Math.round(v)); }
+
+// A responsive <svg viewBox="0 0 640 H"> scales its whole coordinate system (including <text>
+// font-size, which is in SVG user units) down to fit its actual rendered pixel width. That means
+// the CSS "font-size:12.5px" on .chart-svg text is only true when the SVG happens to render at
+// exactly 640px wide — on a real card (~400-560px on PC, ~300-360px on mobile) it visibly shrinks
+// well below 12.5px, unlike the plain-HTML Thu/Chi legend text which is never scaled. Re-render
+// the chart once more at its REAL measured pixel width (scale becomes 1:1) so the axis text ends
+// up genuinely the same size as the legend, on both PC and mobile — not just "the same declared
+// CSS value".
+function resizeBarChartToRealWidth(svgEl, rows, labelA, labelB, colorA, colorB, fontPx){
+  if(!svgEl) return;
+  const rect = svgEl.getBoundingClientRect();
+  if(!rect.width) return;
+  svgEl.outerHTML = groupedBarSvg(rows, labelA, labelB, colorA, colorB, rect.width, fontPx);
+}
 
 function periodPickerHtml(prefix){
   const years = availableYears();
@@ -836,7 +885,7 @@ function renderEntry(){
             '<button type="button" class="chi" data-type="chi" aria-pressed="'+(type==="chi")+'">Chi</button>'+
           '</div></div>'+
           '<div class="field span2"><label for="f-cat">Danh mục</label><select id="f-cat" required></select></div>'+
-          '<div class="field span2"><label for="f-amount">Số tiền (₫)</label><input type="number" id="f-amount" min="0" step="1000" required value="'+(editing?editing.amount:"")+'"><div class="amount-preview" id="f-amount-preview">&nbsp;</div></div>'+
+          '<div class="field span2"><label for="f-amount">Số tiền (₫)</label><input type="text" inputmode="numeric" id="f-amount" required value="'+(editing?fmtInt(editing.amount):"")+'"><div class="amount-preview" id="f-amount-preview">&nbsp;</div></div>'+
           '<div class="field span2"><label for="f-desc">Diễn giải</label><input type="text" id="f-desc" placeholder="VD: Ăn trưa, tiền điện tháng 9…" value="'+(editing?esc(editing.desc):"")+'"></div>'+
           '<div class="field span2"><label for="f-method">Hình thức</label><select id="f-method"></select></div>'+
           '<div class="field span6"><label for="f-note">Ghi chú (không bắt buộc)</label><input type="text" id="f-note" value="'+(editing?esc(editing.note||""):"")+'"></div>'+
@@ -868,8 +917,9 @@ function renderEntry(){
   });
   const amtInput = document.getElementById("f-amount");
   const amtPreview = document.getElementById("f-amount-preview");
-  function updatePreview(){ amtPreview.textContent = amtInput.value ? fmtMoney(Number(amtInput.value)) : " "; }
-  amtInput.oninput = updatePreview; updatePreview();
+  attachThousandsInput(amtInput);
+  function updatePreview(){ const v = parseIntInput(amtInput.value); amtPreview.textContent = v ? fmtMoney(v) : " "; }
+  amtInput.addEventListener("input", updatePreview); updatePreview();
 
   document.getElementById("txForm").onsubmit = async (e)=>{
     e.preventDefault();
@@ -878,7 +928,7 @@ function renderEntry(){
       date: document.getElementById("f-date").value || todayISO(),
       type: t,
       category: document.getElementById("f-cat").value,
-      amount: Number(document.getElementById("f-amount").value)||0,
+      amount: parseIntInput(document.getElementById("f-amount").value),
       desc: document.getElementById("f-desc").value.trim(),
       method: document.getElementById("f-method").value,
       note: document.getElementById("f-note").value.trim()
@@ -962,7 +1012,8 @@ function renderMonthly(){
   const rateYear = totalThu>0 ? (totalThu-totalChi)/totalThu : 0;
   const totalRow = '<tr class="total"><td>Cả năm</td><td class="mono">'+fmtMoney(totalThu)+'</td><td class="mono">'+fmtMoney(totalChi)+'</td><td class="mono">'+fmtMoney(totalThu-totalChi)+'</td><td class="mono">'+fmtPct(rateYear)+'</td><td class="mono">'+fmtMoney(rows[11].cum)+'</td></tr>';
 
-  const barSvg = groupedBarSvg(rows.map(r=>({label:"T"+r.m,a:r.thu,b:r.chi})), "Thu","Chi","var(--ser-thu)","var(--ser-chi)");
+  const barRows = rows.map(r=>({label:"T"+r.m,a:r.thu,b:r.chi}));
+  const barSvg = groupedBarSvg(barRows, "Thu","Chi","var(--ser-thu)","var(--ser-chi)", undefined, 11.5);
 
   const cats = (S.settings.expenseCats||[]).map(c=>{
     const vals = rows.map(r=>{ let s=0; S.tx.forEach(t=>{ if(t.type==="chi"&&t.category===c.name){ const p=ymOf(t.date); if(p.y===y&&p.m===r.m) s+=Number(t.amount)||0; } }); return s; });
@@ -987,6 +1038,7 @@ function renderMonthly(){
       (cats.length? '<div class="tbl-wrap"><table><thead>'+matrixHead+'</thead><tbody>'+matrixRows+'</tbody></table></div>' : '<div class="empty">Chưa có dữ liệu chi tiêu trong năm này.</div>')+
     '</div>';
 
+  resizeBarChartToRealWidth(root.querySelector(".chart-svg"), barRows, "Thu","Chi","var(--ser-thu)","var(--ser-chi)", 11.5);
   document.getElementById("monthlyYear").onchange = (e)=>{ S.dashY = Number(e.target.value); renderMonthly(); };
 }
 
@@ -996,17 +1048,29 @@ function csvEscape(v){
   const s = v==null ? "" : String(v);
   return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
 }
-function buildCsv(rows){
-  const lines = [CSV_COLS.join(",")];
-  rows.forEach(t=>{
-    lines.push(CSV_COLS.map(k=>csvEscape(k==="type" ? (t.type==="thu"?"thu":"chi") : t[k])).join(","));
-  });
+function csvSectionLines(name, header, dataRows){
+  const lines = ["#"+name];
+  if (header) lines.push(header.map(csvEscape).join(","));
+  dataRows.forEach(r=> lines.push(r.map(csvEscape).join(",")));
+  return lines;
+}
+/** Export file bundles the current settings (chung 1 file) plus the transaction list, in labelled CSV sections. */
+function buildExportCsv(settings, rows){
+  const s = settings || {};
+  const lines = [];
+  lines.push(...csvSectionLines("SETTINGS", ["year","openingBalance","savingsGoalPct","alertPct"], [[
+    s.year||"", s.openingBalance||0, Math.round((s.savingsGoalPct||0)*100), Math.round((s.alertPct||0)*100)
+  ]]));
+  lines.push(...csvSectionLines("EXPENSE_CATS", ["name","budget"], (s.expenseCats||[]).map(c=>[c.name, c.budget])));
+  lines.push(...csvSectionLines("INCOME_CATS", ["name"], (s.incomeCats||[]).map(c=>[c])));
+  lines.push(...csvSectionLines("METHODS", ["name"], (s.methods||[]).map(c=>[c])));
+  lines.push(...csvSectionLines("TRANSACTIONS", CSV_COLS, rows.map(t=>CSV_COLS.map(k=> k==="type" ? (t.type==="thu"?"thu":"chi") : t[k]))));
   return "﻿"+lines.join("\r\n");
 }
 async function doExport(){
   if (!S.tx.length){ toast("Chưa có giao dịch nào để xuất."); return; }
   const rows = S.tx.slice().sort((a,b)=> a.date<b.date?-1:(a.date>b.date?1:0));
-  const csv = buildCsv(rows);
+  const csv = buildExportCsv(S.settings, rows);
   const stamp = todayISO();
   const filename = "so-thu-chi-"+stamp+".csv";
 
@@ -1019,7 +1083,7 @@ async function doExport(){
       a.href = url; a.download = filename;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       setTimeout(()=>URL.revokeObjectURL(url), 1000);
-      toast("Đã xuất "+rows.length+" giao dịch ra file CSV.");
+      toast("Đã xuất "+rows.length+" giao dịch kèm cài đặt ra file CSV.");
     }catch(err){ toast("Không xuất được file, thử lại nhé."); }
     return;
   }
@@ -1027,7 +1091,7 @@ async function doExport(){
   if (!S.downloads){ toast("Tính năng xuất file không khả dụng ở đây."); return; }
   try{
     const res = await S.downloads.save({ filename, data: csv });
-    if (res.status==="saved") toast("Đã xuất "+rows.length+" giao dịch ra file CSV.");
+    if (res.status==="saved") toast("Đã xuất "+rows.length+" giao dịch kèm cài đặt ra file CSV.");
   }catch(err){
     const code = err && err.code;
     if (code==="declined") return;
@@ -1055,6 +1119,55 @@ function parseCsv(text){
   }
   if (field.length || row.length){ row.push(field); rows.push(row); }
   return rows.filter(r => !(r.length===1 && r[0].trim()===""));
+}
+/** Splits a parsed CSV table into named sections using "#SECTION_NAME" marker rows.
+ *  Files exported before this feature have no markers — everything before the first marker
+ *  (i.e. the whole file) is collected under __LEGACY__ so old exports still import fine. */
+function splitCsvSections(table){
+  const sections = {}; let cur = null;
+  table.forEach(row=>{
+    if (row.length===1 && /^#[A-Z_]+$/.test(String(row[0]||"").trim())){
+      cur = String(row[0]).trim().slice(1);
+      sections[cur] = [];
+    } else if (cur){
+      sections[cur].push(row);
+    } else {
+      (sections.__LEGACY__ = sections.__LEGACY__ || []).push(row);
+    }
+  });
+  return sections;
+}
+function parseImportedSettings(sections){
+  if (!sections.SETTINGS || sections.SETTINGS.length<2) return null;
+  const header = sections.SETTINGS[0].map(h=>String(h).trim());
+  const row = sections.SETTINGS[1];
+  const val = k=> row[header.indexOf(k)];
+  const settings = {
+    year: Number(val("year"))||new Date().getFullYear(),
+    openingBalance: Number(val("openingBalance"))||0,
+    savingsGoalPct: Math.max(0,Math.min(100,Number(val("savingsGoalPct"))||0))/100,
+    alertPct: Math.max(0,Math.min(100,Number(val("alertPct"))||0))/100,
+    expenseCats: [], incomeCats: [], methods: [], seeded: true
+  };
+  if (sections.EXPENSE_CATS && sections.EXPENSE_CATS.length>1){
+    const h = sections.EXPENSE_CATS[0].map(x=>String(x).trim());
+    const ni=h.indexOf("name"), bi=h.indexOf("budget");
+    settings.expenseCats = sections.EXPENSE_CATS.slice(1)
+      .filter(r=>r.some(c=>String(c).trim()!==""))
+      .map(r=>({name:String(r[ni]||"").trim(), budget:Number(r[bi])||0}))
+      .filter(c=>c.name);
+  }
+  if (sections.INCOME_CATS && sections.INCOME_CATS.length>1){
+    const h = sections.INCOME_CATS[0].map(x=>String(x).trim());
+    const ni=h.indexOf("name");
+    settings.incomeCats = sections.INCOME_CATS.slice(1).map(r=>String(r[ni]||"").trim()).filter(Boolean);
+  }
+  if (sections.METHODS && sections.METHODS.length>1){
+    const h = sections.METHODS[0].map(x=>String(x).trim());
+    const ni=h.indexOf("name");
+    settings.methods = sections.METHODS.slice(1).map(r=>String(r[ni]||"").trim()).filter(Boolean);
+  }
+  return settings;
 }
 function normType(v){
   const s = String(v||"").trim().toLowerCase();
@@ -1087,37 +1200,52 @@ function handleImportFile(file){
     const text = String(reader.result||"");
     const table = parseCsv(text);
     if (!table.length){ toast("File CSV trống hoặc không đọc được."); return; }
-    const header = table[0].map(h=>h.trim().toLowerCase());
-    const idx = { date:header.indexOf("date"), type:header.indexOf("type"), category:header.indexOf("category"), amount:header.indexOf("amount"), desc:header.indexOf("desc"), method:header.indexOf("method"), note:header.indexOf("note") };
-    if (idx.date<0 || idx.type<0 || idx.category<0 || idx.amount<0){
-      toast("File CSV cần có các cột: date, type, category, amount."); return;
+    const sections = splitCsvSections(table);
+    const txTable = sections.TRANSACTIONS || sections.__LEGACY__;
+    const importedSettings = parseImportedSettings(sections);
+    if (!txTable || !txTable.length){
+      if (!importedSettings){ toast("File CSV không có dữ liệu để nhập."); return; }
     }
-    const dataRows = table.slice(1);
-    const valid = []; let bad = 0;
-    dataRows.forEach(r=>{
-      if (!r.some(c=>String(c).trim()!=="")) return;
-      const date = normDate(idx.date>=0? r[idx.date]:"");
-      const type = normType(idx.type>=0? r[idx.type]:"");
-      const category = (idx.category>=0? r[idx.category]:"").trim();
-      const amount = normAmount(idx.amount>=0? r[idx.amount]:"");
-      if (!date || !type || !category || !amount || amount<=0){ bad++; return; }
-      valid.push({
-        date, type, category, amount,
-        desc: idx.desc>=0 ? (r[idx.desc]||"").trim() : "",
-        method: idx.method>=0 ? (r[idx.method]||"").trim() : "",
-        note: idx.note>=0 ? (r[idx.note]||"").trim() : "",
-        createdAt: new Date().toISOString()
-      });
-    });
-    if (!valid.length){ toast("Không có dòng hợp lệ nào trong file để nhập."); return; }
+    let valid = [], bad = 0;
+    if (txTable && txTable.length){
+      const header = txTable[0].map(h=>h.trim().toLowerCase());
+      const idx = { date:header.indexOf("date"), type:header.indexOf("type"), category:header.indexOf("category"), amount:header.indexOf("amount"), desc:header.indexOf("desc"), method:header.indexOf("method"), note:header.indexOf("note") };
+      if (idx.date<0 || idx.type<0 || idx.category<0 || idx.amount<0){
+        if (!importedSettings){ toast("File CSV cần có các cột: date, type, category, amount."); return; }
+      } else {
+        const dataRows = txTable.slice(1);
+        dataRows.forEach(r=>{
+          if (!r.some(c=>String(c).trim()!=="")) return;
+          const date = normDate(idx.date>=0? r[idx.date]:"");
+          const type = normType(idx.type>=0? r[idx.type]:"");
+          const category = (idx.category>=0? r[idx.category]:"").trim();
+          const amount = normAmount(idx.amount>=0? r[idx.amount]:"");
+          if (!date || !type || !category || !amount || amount<=0){ bad++; return; }
+          valid.push({
+            date, type, category, amount,
+            desc: idx.desc>=0 ? (r[idx.desc]||"").trim() : "",
+            method: idx.method>=0 ? (r[idx.method]||"").trim() : "",
+            note: idx.note>=0 ? (r[idx.note]||"").trim() : "",
+            createdAt: new Date().toISOString()
+          });
+        });
+      }
+    }
+    if (!valid.length && !importedSettings){ toast("Không có dòng hợp lệ nào trong file để nhập."); return; }
     S.importing = true;
     renderSettingsView();
     try{
+      const parts = [];
+      if (importedSettings){
+        try{ await S.db.doc("app/settings").set(importedSettings); parts.push("cài đặt"); }catch(e){}
+      }
       let ok = 0;
       for (const t of valid){
         try{ await S.db.collection("transactions").add(t); ok++; }catch(e){}
       }
-      toast("Đã nhập "+ok+" giao dịch"+(bad?(", bỏ qua "+bad+" dòng không hợp lệ"):"")+".");
+      if (ok) parts.push(ok+" giao dịch");
+      const msg = parts.length ? ("Đã nhập "+parts.join(" và ")+(bad?(", bỏ qua "+bad+" dòng không hợp lệ"):"")+".") : "Không có gì để nhập.";
+      toast(msg);
     } finally {
       S.importing = false;
       renderSettingsView();
@@ -1131,7 +1259,7 @@ function renderSettingsView(){
   const root = document.querySelector('[data-view="settings"]');
   const s = S.settings;
   const expRows = (s.expenseCats||[]).map((c,i)=>
-    '<div class="cat-row" data-i="'+i+'"><input type="text" class="exp-name" value="'+esc(c.name)+'"><input type="number" class="exp-budget mono" min="0" step="50000" value="'+c.budget+'"><button type="button" class="icon-btn" data-remove="exp" data-i="'+i+'">✕</button></div>'
+    '<div class="cat-row" data-i="'+i+'"><input type="text" class="exp-name" value="'+esc(c.name)+'"><input type="text" inputmode="numeric" class="exp-budget mono" value="'+fmtInt(c.budget)+'"><button type="button" class="icon-btn" data-remove="exp" data-i="'+i+'">✕</button></div>'
   ).join("");
   const incRows = (s.incomeCats||[]).map((c,i)=>
     '<div class="cat-row" style="grid-template-columns:1fr 34px;" data-i="'+i+'"><input type="text" class="inc-name" value="'+esc(c)+'"><button type="button" class="icon-btn" data-remove="inc" data-i="'+i+'">✕</button></div>'
@@ -1147,7 +1275,7 @@ function renderSettingsView(){
         '<div class="section-title">Thông số chung</div>'+
         '<div class="stack">'+
           '<div class="field"><label for="st-year">Năm theo dõi</label><input type="number" id="st-year" value="'+s.year+'"></div>'+
-          '<div class="field"><label for="st-open">Số dư đầu kỳ (₫)</label><input type="number" id="st-open" step="100000" value="'+s.openingBalance+'"></div>'+
+          '<div class="field"><label for="st-open">Số dư đầu kỳ (₫)</label><input type="text" inputmode="numeric" id="st-open" value="'+fmtInt(s.openingBalance)+'"></div>'+
           '<div class="field"><label for="st-goal">Mục tiêu tiết kiệm (%)</label><input type="number" id="st-goal" min="0" max="100" value="'+Math.round(s.savingsGoalPct*100)+'"></div>'+
           '<div class="field"><label for="st-alert">Ngưỡng cảnh báo ngân sách (%)</label><input type="number" id="st-alert" min="0" max="100" value="'+Math.round(s.alertPct*100)+'"></div>'+
         '</div>'+
@@ -1160,6 +1288,7 @@ function renderSettingsView(){
           '<input type="file" id="importCsvInput" accept=".csv,text/csv" style="display:none">'+
           (sampleCount? '<button type="button" class="btn btn-danger" id="clearSample">Xóa dữ liệu mẫu</button>' : '')+
           (S.tx.length? '<button type="button" class="btn btn-danger" id="clearAll">'+(S.clearAllArm?"Xác nhận xóa toàn bộ?":"Xóa toàn bộ giao dịch")+'</button>' : '')+
+          '<button type="button" class="btn btn-primary" id="saveSettings">Lưu cài đặt</button>'+
         '</div>'+
       '</div>'+
     '</div>'+
@@ -1181,27 +1310,27 @@ function renderSettingsView(){
           '<button type="button" class="btn btn-sm" id="addMeth">+ Thêm hình thức</button>'+
         '</div>'+
       '</div>'+
-    '</div>'+
-    '<div class="row" style="justify-content:flex-end;">'+
-      '<button type="button" class="btn btn-primary" id="saveSettings">Lưu cài đặt</button>'+
     '</div>';
 
+  attachThousandsInput(document.getElementById("st-open"));
+
   function computeExpTotal(){
-    let t=0; root.querySelectorAll(".exp-budget").forEach(i=>t+=Number(i.value)||0);
+    let t=0; root.querySelectorAll(".exp-budget").forEach(i=>t+=parseIntInput(i.value));
     document.getElementById("expTotal").textContent = fmtMoney(t);
   }
   computeExpTotal();
-  root.querySelectorAll(".exp-budget").forEach(i=>{ i.oninput = computeExpTotal; });
+  root.querySelectorAll(".exp-budget").forEach(i=>{ attachThousandsInput(i); i.addEventListener("input", computeExpTotal); });
 
   root.querySelectorAll('[data-remove]').forEach(b=>{
     b.onclick = ()=>{ b.closest(".cat-row").remove(); computeExpTotal(); };
   });
   document.getElementById("addExp").onclick = ()=>{
     const row = document.createElement("div"); row.className="cat-row";
-    row.innerHTML = '<input type="text" class="exp-name" placeholder="Tên danh mục"><input type="number" class="exp-budget mono" min="0" step="50000" value="0"><button type="button" class="icon-btn" data-remove="exp">✕</button>';
+    row.innerHTML = '<input type="text" class="exp-name" placeholder="Tên danh mục"><input type="text" inputmode="numeric" class="exp-budget mono" value="0"><button type="button" class="icon-btn" data-remove="exp">✕</button>';
     document.getElementById("expList").appendChild(row);
     row.querySelector("[data-remove]").onclick = ()=>{ row.remove(); computeExpTotal(); };
-    row.querySelector(".exp-budget").oninput = computeExpTotal;
+    attachThousandsInput(row.querySelector(".exp-budget"));
+    row.querySelector(".exp-budget").addEventListener("input", computeExpTotal);
     row.querySelector(".exp-name").focus();
   };
   document.getElementById("addInc").onclick = ()=>{
@@ -1258,12 +1387,12 @@ function renderSettingsView(){
   };
 
   document.getElementById("saveSettings").onclick = async ()=>{
-    const expenseCats = Array.from(root.querySelectorAll(".exp-name")).map((el,i)=>({name:el.value.trim(), budget:Number(root.querySelectorAll(".exp-budget")[i].value)||0})).filter(c=>c.name);
+    const expenseCats = Array.from(root.querySelectorAll(".exp-name")).map((el,i)=>({name:el.value.trim(), budget:parseIntInput(root.querySelectorAll(".exp-budget")[i].value)})).filter(c=>c.name);
     const incomeCats = Array.from(root.querySelectorAll(".inc-name")).map(el=>el.value.trim()).filter(Boolean);
     const methods = Array.from(root.querySelectorAll(".meth-name")).map(el=>el.value.trim()).filter(Boolean);
     const newSettings = {
       year: Number(document.getElementById("st-year").value)||new Date().getFullYear(),
-      openingBalance: Number(document.getElementById("st-open").value)||0,
+      openingBalance: parseIntInput(document.getElementById("st-open").value),
       savingsGoalPct: Math.max(0,Math.min(100,Number(document.getElementById("st-goal").value)||0))/100,
       alertPct: Math.max(0,Math.min(100,Number(document.getElementById("st-alert").value)||0))/100,
       expenseCats, incomeCats, methods, seeded:true
