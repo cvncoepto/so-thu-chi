@@ -1,8 +1,14 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Sổ Thu Chi</title>
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sổ Thu Chi</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <!-- Only needed for the standalone (Netlify) version — login via Google through Auth0. Harmless if left in. -->
 <script src="https://cdn.auth0.com/js/auth0-spa-js/2.4/auth0-spa-js.production.js"></script>
-</head><body>
+</head>
+<body>
 <style>
 :root{
   --bg:#f7f5ee; --surface:#fffffe; --surface-2:#f1eee2; --line:#e4dfcf;
@@ -56,7 +62,7 @@
 }
 *{box-sizing:border-box;}
 body{background:var(--bg); color:var(--ink); font-family:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;}
-.mono{font-family:"IBM Plex Mono","SFMono-Regular",Menlo,"Liberation Mono","Courier New",ui-monospace,monospace; font-variant-numeric:tabular-nums; font-feature-settings:"zero" 1;}
+.mono{font-family:"IBM Plex Mono","SFMono-Regular",Menlo,"Liberation Mono","Courier New",ui-monospace,monospace; font-variant-numeric:tabular-nums;}
 .disp{font-family:"Fraunces",Georgia,serif;}
 #app{max-width:1080px; margin:0 auto; padding-inline:16px; padding-block:18px 64px;}
 h1,h2,h3{margin:0; text-wrap:balance;}
@@ -91,14 +97,14 @@ a{color:inherit;}
 
 /* ---------- cards / layout ---------- */
 .card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:var(--shadow);}
-.grid{display:grid; gap:20px;}
+.grid{display:grid; gap:10px;}
 .g-kpi{grid-template-columns:repeat(4,1fr);}
 .g-2{grid-template-columns:1.3fr 1fr;}
 .g-2b{grid-template-columns:1fr 1fr;}
 @media (max-width:860px){ .g-kpi{grid-template-columns:repeat(2,1fr);} .g-2,.g-2b{grid-template-columns:1fr;} }
 .section-title{font-size:15px; font-weight:600; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;}
 .section-title .hint{font-size:12px; font-weight:400; color:var(--muted);}
-.stack{display:flex; flex-direction:column; gap:20px;}
+.stack{display:flex; flex-direction:column; gap:10px;}
 .card > .stack{gap:14px;}
 .row{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
 .spacer{flex:1;}
@@ -109,7 +115,7 @@ a{color:inherit;}
 .period select{border:none; background:transparent; color:var(--ink); font-weight:600; font-size:13.5px; padding:4px 2px;}
 
 /* ---------- KPI tiles ---------- */
-.kpi{padding:16px; border-radius:14px; border:1px solid var(--line); background:var(--surface); position:relative;}
+.kpi{padding:16px; border-radius:14px; border:1px solid var(--line); background:var(--surface); position:relative; min-width:0;}
 .kpi::before{content:""; position:absolute; inset:0 0 auto 0; height:3px; border-radius:14px 14px 0 0; background:var(--bar,var(--accent));}
 .kpi .lbl{font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);}
 .kpi .val{font-size:23px; font-weight:600; margin-top:8px; color:var(--fg,var(--ink)); white-space:nowrap; font-variant-numeric:tabular-nums;}
@@ -123,6 +129,7 @@ a{color:inherit;}
 .year-band{border:1.5px solid var(--accent); background:linear-gradient(135deg, var(--accent-soft), var(--surface) 45%);}
 .year-band .section-title{color:var(--accent-strong);}
 .year-content{display:grid; grid-template-columns:2fr 3fr; gap:22px; align-items:center; margin-top:16px;}
+.year-content > *{min-width:0;}
 .year-hero{border-right:1px solid var(--line); padding-right:22px;}
 .year-hero .lbl{font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-2);}
 .year-hero .val{font-size:34px; font-weight:600; margin-top:6px; color:var(--accent-strong); white-space:nowrap; font-variant-numeric:tabular-nums;}
@@ -131,7 +138,7 @@ a{color:inherit;}
 .subhead{font-size:11.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-bottom:10px;}
 @media (max-width:760px){ .year-content{grid-template-columns:1fr;} .year-hero{border-right:none; border-bottom:1px solid var(--line); padding-right:0; padding-bottom:16px; margin-bottom:2px;} }
 @media (max-width:760px){ .year-hero .val{font-size:min(34px,8vw);} }
-@media (max-width:600px){ .year-kpis{gap:8px;} .year-kpis .kpi{padding:10px;} .year-kpis .kpi .val{font-size:clamp(11px,3.8vw,23px);} .year-kpis .kpi .lbl{font-size:10px;} .year-kpis .kpi .sub{font-size:10.5px;} }
+@media (max-width:600px){ .year-kpis{gap:8px;} .year-kpis .kpi{padding:10px;} .year-kpis .kpi .val{font-size:clamp(11px,3.8vw,23px); overflow:hidden; text-overflow:ellipsis;} .year-kpis .kpi .lbl{font-size:10px;} .year-kpis .kpi .sub{font-size:10.5px;} }
 
 /* ---------- pills ---------- */
 .pill{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:4px 10px 4px 8px; border-radius:999px; background:var(--surface-2); color:var(--ink);}
@@ -167,7 +174,7 @@ a{color:inherit;}
 
 /* ---------- bar chart ---------- */
 .chart-svg{width:100%; height:auto; display:block;}
-.chart-svg text{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:9.5px; fill:var(--muted); font-feature-settings:"zero" 1;}
+.chart-svg text{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:9.5px; fill:var(--muted);}
 .chart-legend{display:flex; gap:16px; font-size:12px; color:var(--ink-2); margin-top:8px;}
 .chart-legend .li{display:flex; align-items:center; gap:6px;}
 .chart-legend .sw{width:10px; height:10px; border-radius:3px;}
@@ -283,7 +290,7 @@ tr.total td{font-weight:700; background:var(--surface-2);}
 /* ================= utilities ================= */
 function pad2(n){return String(n).padStart(2,"0");}
 function todayISO(){const d=new Date(); return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());}
-function fmtMoney(n){ n = Number(n)||0; const neg = n<0; const s = Math.round(Math.abs(n)).toLocaleString("vi-VN"); return (neg?"-":"")+s+" ₫"; }
+function fmtMoney(n){ n = Number(n)||0; const neg = n<0; const s = Math.round(Math.abs(n)).toLocaleString("vi-VN"); return (neg?"-":"")+s; }
 function fmtPct(n){ return Math.round((Number(n)||0)*100)+"%"; }
 /** Thousand/million separators for editable amount fields (not used for years). */
 function fmtInt(n){ n = Math.round(Number(n)||0); return n.toLocaleString("vi-VN"); }
@@ -453,11 +460,8 @@ function renderLockScreen(){
     '<div class="card lock-card">'+
       '<div class="lock-icon">🔒</div>'+
       '<h2 class="disp">Nội dung riêng tư</h2>'+
-      '<p>Đăng nhập bằng Google để xem và quản lý sổ thu chi của bạn. Người khác mở đường dẫn này sẽ không thấy được dữ liệu.</p>'+
-      '<button type="button" class="btn btn-primary" id="lockLoginBtn">Đăng nhập bằng Google</button>'+
+      '<p>Nhấn "Đăng nhập bằng Google" ở góc trên bên phải để xem và quản lý sổ thu chi của bạn. Người khác mở đường dẫn này sẽ không thấy được dữ liệu.</p>'+
     '</div>';
-  const btn = document.getElementById("lockLoginBtn");
-  if (btn) btn.onclick = doLogin;
 }
 
 /* ================= real storage for the standalone (Netlify) version =================
@@ -754,15 +758,17 @@ function renderDashboard(){
         '<div class="section-title">Ngân sách theo danh mục<span class="hint">Đã chi so với hạn mức</span></div>'+
         (budgetRows || '<div class="empty">Chưa có danh mục chi nào được thiết lập.</div>')+
       '</div>'+
-      '<div class="card">'+
-        '<div class="section-title">Cơ cấu chi tiêu</div>'+
-        (slices.length ? donutHtml(slices, totalSpent) : '<div class="empty">Chưa có khoản chi nào trong tháng này.</div>')+
+      '<div class="stack">'+
+        '<div class="card">'+
+          '<div class="section-title">Cơ cấu chi tiêu</div>'+
+          (slices.length ? donutHtml(slices, totalSpent) : '<div class="empty">Chưa có khoản chi nào trong tháng này.</div>')+
+        '</div>'+
+        '<div class="card">'+
+          '<div class="section-title">Xu hướng 6 tháng gần đây</div>'+
+          trendSvg+
+          '<div class="chart-legend"><span class="li"><i class="sw" style="background:var(--ser-thu)"></i>Thu</span><span class="li"><i class="sw" style="background:var(--ser-chi)"></i>Chi</span></div>'+
+        '</div>'+
       '</div>'+
-    '</div>'+
-    '<div class="card">'+
-      '<div class="section-title">Xu hướng 6 tháng gần đây</div>'+
-      trendSvg+
-      '<div class="chart-legend"><span class="li"><i class="sw" style="background:var(--ser-thu)"></i>Thu</span><span class="li"><i class="sw" style="background:var(--ser-chi)"></i>Chi</span></div>'+
     '</div>';
 
   bindPeriodPicker("dash", (y,m)=>{ S.dashY=y; S.dashM=m; renderDashboard(); });
@@ -1380,4 +1386,5 @@ renderTabs();
 boot();
 })();
 </script>
-</body></html>
+</body>
+</html>
