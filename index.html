@@ -91,14 +91,15 @@ a{color:inherit;}
 
 /* ---------- cards / layout ---------- */
 .card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:var(--shadow);}
-.grid{display:grid; gap:14px;}
+.grid{display:grid; gap:20px;}
 .g-kpi{grid-template-columns:repeat(4,1fr);}
 .g-2{grid-template-columns:1.3fr 1fr;}
 .g-2b{grid-template-columns:1fr 1fr;}
 @media (max-width:860px){ .g-kpi{grid-template-columns:repeat(2,1fr);} .g-2,.g-2b{grid-template-columns:1fr;} }
 .section-title{font-size:15px; font-weight:600; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;}
 .section-title .hint{font-size:12px; font-weight:400; color:var(--muted);}
-.stack{display:flex; flex-direction:column; gap:14px;}
+.stack{display:flex; flex-direction:column; gap:20px;}
+.card > .stack{gap:14px;}
 .row{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
 .spacer{flex:1;}
 
@@ -243,7 +244,7 @@ tr.total td{font-weight:700; background:var(--surface-2);}
 .lock-card h2{font-size:19px; font-weight:600; margin-bottom:8px;}
 .lock-card p{font-size:13.5px; color:var(--ink-2); line-height:1.55; margin-bottom:22px;}
 [data-view]{display:none;}
-[data-view].active{display:block;}
+[data-view].active{display:flex;}
 @media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important;} }
 </style>
 
