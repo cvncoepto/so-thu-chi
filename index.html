@@ -728,7 +728,7 @@ function renderDashboard(){
   const trendMonths = monthsBack(y,m,6);
   const trendData = trendMonths.map(({y,m})=>Object.assign({y,m}, monthTotals(y,m)));
   const trendRows = trendData.map(d=>({label:"T"+d.m, a:d.thu, b:d.chi}));
-  const trendSvg = groupedBarSvg(trendRows, "Thu","Chi","var(--ser-thu)","var(--ser-chi)");
+  const trendSvg = groupedBarSvg(trendRows, "Thu","Chi","var(--ser-thu)","var(--ser-chi)", undefined, 11.5);
 
   const yearRows = yearMonthsSeries(y);
   const yearBalance = yearRows[11].cum;
@@ -772,7 +772,7 @@ function renderDashboard(){
       '</div>'+
     '</div>';
 
-  resizeTrendChartToRealWidth(root.querySelector(".chart-svg"), trendRows, "Thu","Chi","var(--ser-thu)","var(--ser-chi)");
+  resizeTrendChartToRealWidth(root.querySelector(".chart-svg"), trendRows, "Thu","Chi","var(--ser-thu)","var(--ser-chi)", 11.5);
   bindPeriodPicker("dash", (y,m)=>{ S.dashY=y; S.dashM=m; renderDashboard(); });
 }
 
@@ -794,14 +794,18 @@ function donutHtml(slices, total){
   return '<div class="donut-wrap"><div class="donut" style="background:'+grad+'"><div class="hole"><div class="n mono">'+fmtMoney(total)+'</div><div class="l">tổng chi</div></div></div><div class="legend">'+legend+'</div></div>';
 }
 
-function groupedBarSvg(rows, labelA, labelB, colorA, colorB, widthPx){
+function groupedBarSvg(rows, labelA, labelB, colorA, colorB, widthPx, fontPx){
   // Taller on PC (matches the .g-2 two-column breakpoint elsewhere): +1.25x again on top of the mobile height.
   const isDesktop = typeof window!=="undefined" && window.matchMedia && window.matchMedia("(min-width:861px)").matches;
   // widthPx (optional): the card's REAL measured pixel width. When given, the viewBox is set to
   // exactly that width so the SVG renders 1:1 with no responsive scale-down — otherwise <text>
   // font-size (declared in SVG user units) gets shrunk along with everything else and ends up
   // visibly smaller than same-declared-size HTML text (e.g. the Thu/Chi legend below the chart).
+  // fontPx (optional): overrides the CSS-declared .chart-svg text font-size (12.5px) for this
+  // instance only — only meaningful once widthPx makes the SVG 1:1, since otherwise it would
+  // just get scaled again like the CSS default does.
   const W=widthPx||640, H=isDesktop?298:238, padL=54,padR=10,padT=isDesktop?18:16,padB=isDesktop?32:28;
+  const textAttr = fontPx ? ' style="font-size:'+fontPx+'px"' : '';
   const max = Math.max(1, ...rows.map(r=>Math.max(r.a,r.b)));
   const niceMax = niceCeil(max);
   const plotW = W-padL-padR, plotH = H-padT-padB;
@@ -814,7 +818,7 @@ function groupedBarSvg(rows, labelA, labelB, colorA, colorB, widthPx){
     const yy = padT + plotH - (plotH*i/gridN);
     const val = niceMax*i/gridN;
     grid += '<line x1="'+padL+'" x2="'+(W-padR)+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--line)" stroke-width="1"/>';
-    grid += '<text x="'+(padL-6)+'" y="'+(yy+3)+'" text-anchor="end">'+shortNum(val)+'</text>';
+    grid += '<text x="'+(padL-6)+'" y="'+(yy+3)+'"'+textAttr+' text-anchor="end">'+shortNum(val)+'</text>';
   }
   let bars = "";
   rows.forEach((r,i)=>{
@@ -823,7 +827,7 @@ function groupedBarSvg(rows, labelA, labelB, colorA, colorB, widthPx){
     const xa = gx + groupW/2 - barW - 2, xb = gx + groupW/2 + 2;
     bars += '<rect x="'+xa+'" y="'+(y0-ha)+'" width="'+barW+'" height="'+Math.max(0,ha)+'" rx="2" fill="'+colorA+'"><title>'+labelA+' '+r.label+': '+fmtMoney(r.a)+'</title></rect>';
     bars += '<rect x="'+xb+'" y="'+(y0-hb)+'" width="'+barW+'" height="'+Math.max(0,hb)+'" rx="2" fill="'+colorB+'"><title>'+labelB+' '+r.label+': '+fmtMoney(r.b)+'</title></rect>';
-    bars += '<text x="'+(gx+groupW/2)+'" y="'+(H-6)+'" text-anchor="middle">'+esc(r.label)+'</text>';
+    bars += '<text x="'+(gx+groupW/2)+'" y="'+(H-6)+'"'+textAttr+' text-anchor="middle">'+esc(r.label)+'</text>';
   });
   return '<svg class="chart-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Biểu đồ thu chi theo tháng">'+grid+bars+'</svg>';
 }
@@ -838,11 +842,11 @@ function shortNum(v){ if(v>=1e9) return (v/1e9).toFixed(v%1e9?1:0)+"tỷ"; if(v>
 // the chart once more at its REAL measured pixel width (scale becomes 1:1) so the axis text ends
 // up genuinely the same size as the legend, on both PC and mobile — not just "the same declared
 // CSS value".
-function resizeTrendChartToRealWidth(svgEl, rows, labelA, labelB, colorA, colorB){
+function resizeTrendChartToRealWidth(svgEl, rows, labelA, labelB, colorA, colorB, fontPx){
   if(!svgEl) return;
   const rect = svgEl.getBoundingClientRect();
   if(!rect.width) return;
-  svgEl.outerHTML = groupedBarSvg(rows, labelA, labelB, colorA, colorB, rect.width);
+  svgEl.outerHTML = groupedBarSvg(rows, labelA, labelB, colorA, colorB, rect.width, fontPx);
 }
 
 function periodPickerHtml(prefix){
