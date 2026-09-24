@@ -39,7 +39,10 @@
     --st-crit:#e66767; --st-crit-soft:rgba(230,103,103,.2);
     --ser-thu:#3fae3f; --ser-chi:#e66767;
     --cat-0:#3987e5; --cat-1:#d95926; --cat-2:#199e70; --cat-3:#c98500; --cat-4:#d55181; --cat-5:#9085e9; --cat-khac:#84928c;
-    --seq-1:#1c2c3d; --seq-2:#22436c; --seq-3:#2a5c96; --seq-4:#3987e5; --seq-5:#8fc0f7;
+    /* Reversed vs. the source blues (#1c2c3d…#8fc0f7): "Xu hướng"/danh mục × tháng heatmap
+       reads darker = more, same direction as light mode, so --seq-1 stays the palest stop and
+       --seq-5 the deepest in both themes. */
+    --seq-1:#8fc0f7; --seq-2:#3987e5; --seq-3:#2a5c96; --seq-4:#22436c; --seq-5:#1c2c3d;
     --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 20px -10px rgba(0,0,0,.5);
     color-scheme: dark;
   }
@@ -56,7 +59,7 @@
   --st-crit:#e66767; --st-crit-soft:rgba(230,103,103,.2);
   --ser-thu:#3fae3f; --ser-chi:#e66767;
   --cat-0:#3987e5; --cat-1:#d95926; --cat-2:#199e70; --cat-3:#c98500; --cat-4:#d55181; --cat-5:#9085e9; --cat-khac:#84928c;
-  --seq-1:#1c2c3d; --seq-2:#22436c; --seq-3:#2a5c96; --seq-4:#3987e5; --seq-5:#8fc0f7;
+  --seq-1:#8fc0f7; --seq-2:#3987e5; --seq-3:#2a5c96; --seq-4:#22436c; --seq-5:#1c2c3d;
   --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 20px -10px rgba(0,0,0,.5);
   color-scheme: dark;
 }
