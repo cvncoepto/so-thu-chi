@@ -727,7 +727,8 @@ function renderDashboard(){
 
   const trendMonths = monthsBack(y,m,6);
   const trendData = trendMonths.map(({y,m})=>Object.assign({y,m}, monthTotals(y,m)));
-  const trendSvg = groupedBarSvg(trendData.map(d=>({label:"T"+d.m, a:d.thu, b:d.chi})), "Thu","Chi","var(--ser-thu)","var(--ser-chi)");
+  const trendRows = trendData.map(d=>({label:"T"+d.m, a:d.thu, b:d.chi}));
+  const trendSvg = groupedBarSvg(trendRows, "Thu","Chi","var(--ser-thu)","var(--ser-chi)");
 
   const yearRows = yearMonthsSeries(y);
   const yearBalance = yearRows[11].cum;
@@ -771,6 +772,7 @@ function renderDashboard(){
       '</div>'+
     '</div>';
 
+  resizeTrendChartToRealWidth(root.querySelector(".chart-svg"), trendRows, "Thu","Chi","var(--ser-thu)","var(--ser-chi)");
   bindPeriodPicker("dash", (y,m)=>{ S.dashY=y; S.dashM=m; renderDashboard(); });
 }
 
@@ -792,10 +794,14 @@ function donutHtml(slices, total){
   return '<div class="donut-wrap"><div class="donut" style="background:'+grad+'"><div class="hole"><div class="n mono">'+fmtMoney(total)+'</div><div class="l">tổng chi</div></div></div><div class="legend">'+legend+'</div></div>';
 }
 
-function groupedBarSvg(rows, labelA, labelB, colorA, colorB){
+function groupedBarSvg(rows, labelA, labelB, colorA, colorB, widthPx){
   // Taller on PC (matches the .g-2 two-column breakpoint elsewhere): +1.25x again on top of the mobile height.
   const isDesktop = typeof window!=="undefined" && window.matchMedia && window.matchMedia("(min-width:861px)").matches;
-  const W=640, H=isDesktop?298:238, padL=54,padR=10,padT=isDesktop?18:16,padB=isDesktop?32:28;
+  // widthPx (optional): the card's REAL measured pixel width. When given, the viewBox is set to
+  // exactly that width so the SVG renders 1:1 with no responsive scale-down — otherwise <text>
+  // font-size (declared in SVG user units) gets shrunk along with everything else and ends up
+  // visibly smaller than same-declared-size HTML text (e.g. the Thu/Chi legend below the chart).
+  const W=widthPx||640, H=isDesktop?298:238, padL=54,padR=10,padT=isDesktop?18:16,padB=isDesktop?32:28;
   const max = Math.max(1, ...rows.map(r=>Math.max(r.a,r.b)));
   const niceMax = niceCeil(max);
   const plotW = W-padL-padR, plotH = H-padT-padB;
@@ -823,6 +829,21 @@ function groupedBarSvg(rows, labelA, labelB, colorA, colorB){
 }
 function niceCeil(v){ const p=Math.pow(10,Math.floor(Math.log10(Math.max(v,1)))); const n=v/p; const f = n<=1?1:n<=2?2:n<=5?5:10; return f*p; }
 function shortNum(v){ if(v>=1e9) return (v/1e9).toFixed(v%1e9?1:0)+"tỷ"; if(v>=1e6) return (v/1e6).toFixed(v%1e6?1:0)+"tr"; if(v>=1e3) return (v/1e3).toFixed(0)+"k"; return String(Math.round(v)); }
+
+// A responsive <svg viewBox="0 0 640 H"> scales its whole coordinate system (including <text>
+// font-size, which is in SVG user units) down to fit its actual rendered pixel width. That means
+// the CSS "font-size:12.5px" on .chart-svg text is only true when the SVG happens to render at
+// exactly 640px wide — on a real card (~400-560px on PC, ~300-360px on mobile) it visibly shrinks
+// well below 12.5px, unlike the plain-HTML Thu/Chi legend text which is never scaled. Re-render
+// the chart once more at its REAL measured pixel width (scale becomes 1:1) so the axis text ends
+// up genuinely the same size as the legend, on both PC and mobile — not just "the same declared
+// CSS value".
+function resizeTrendChartToRealWidth(svgEl, rows, labelA, labelB, colorA, colorB){
+  if(!svgEl) return;
+  const rect = svgEl.getBoundingClientRect();
+  if(!rect.width) return;
+  svgEl.outerHTML = groupedBarSvg(rows, labelA, labelB, colorA, colorB, rect.width);
+}
 
 function periodPickerHtml(prefix){
   const years = availableYears();
